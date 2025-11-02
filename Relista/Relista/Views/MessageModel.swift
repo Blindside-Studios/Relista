@@ -6,16 +6,37 @@
 //
 
 import SwiftUI
+import MarkdownUI
 
 struct MessageModel: View {
     let messageText: String
     
     var body: some View {
-        HStack {
-            Text(messageText)
-                .padding()
-            
-            Spacer()
+        VStack{
+            HStack {
+                Markdown(messageText)
+                    .textSelection(.enabled)
+                    .padding()
+                
+                Spacer()
+            }
+            HStack(spacing: 8) {
+                Button("Copy", systemImage: "doc.on.doc") {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(messageText, forType: .string)
+                }
+                .buttonStyle(.borderless)
+                .labelStyle(.iconOnly)
+                
+                Button("Regenerate", systemImage: "arrow.clockwise") {
+                    // regrenerate
+                }
+                .buttonStyle(.borderless)
+                .labelStyle(.iconOnly)
+                
+                Spacer()
+            }
+            .padding(.leading, 12)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal)

@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0ABA50D12EB800D300FE0182 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 0ABA50D02EB800D300FE0182 /* MarkdownUI */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		0ABA50AF2EB7DE3A00FE0182 /* Relista.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Relista.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0ABA50D12EB800D300FE0182 /* MarkdownUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = Relista;
 			packageProductDependencies = (
+				0ABA50D02EB800D300FE0182 /* MarkdownUI */,
 			);
 			productName = Relista;
 			productReference = 0ABA50AF2EB7DE3A00FE0182 /* Relista.app */;
@@ -94,6 +100,9 @@
 			);
 			mainGroup = 0ABA50A62EB7DE3A00FE0182;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0ABA50CF2EB800D300FE0182 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0ABA50B02EB7DE3A00FE0182 /* Products */;
 			projectDirPath = "";
@@ -371,6 +380,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0ABA50CF2EB800D300FE0182 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0ABA50D02EB800D300FE0182 /* MarkdownUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0ABA50CF2EB800D300FE0182 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
+			productName = MarkdownUI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0ABA50A72EB7DE3A00FE0182 /* Project object */;
 }
