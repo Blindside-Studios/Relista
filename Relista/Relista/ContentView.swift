@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State var showingSettings: Bool = false
+    
     var body: some View {
         NavigationSplitView {
             List {
@@ -18,6 +20,19 @@ struct ContentView: View {
             // Chat view
             ChatWindow()
         }
+        
+        #if os(iOS)
+        .toolbar {
+            ToolbarItem(placement: .navigation) {
+                Button(action: { showingSettings = true }) {
+                    Image(systemName: "gearshape")
+                }
+            }
+        }
+        .sheet(isPresented: $showingSettings) {
+            SettingsView()
+        }
+        #endif
     }
 }
 
