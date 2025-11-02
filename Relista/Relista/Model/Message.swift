@@ -15,4 +15,12 @@ struct Message: Identifiable{
 
 enum MessageRole{
     case system, assistant, user
+    
+    func toAPIString() -> String {
+            switch self {
+            case .user: return "user"
+            case .assistant: return "assistant"
+            case .system: return "system"
+            }
+        }
 }

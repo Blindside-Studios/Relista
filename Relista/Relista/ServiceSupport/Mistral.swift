@@ -34,24 +34,35 @@ struct MistralService {
         return messageObj["content"] as! String
     }
     
-    func streamMessage(_ message: String) async throws -> AsyncThrowingStream<String, Error> {
+    func streamMessage(messages: [Message]) async throws -> AsyncThrowingStream<String, Error> {
         let url = URL(string: "https://api.mistral.ai/v1/chat/completions")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
+        print("DEBUG: Converting \(messages.count) messages")
+        
+        // Convert Message array to API format
+        let apiMessages = messages.map { message in
+            [
+                "role": message.role.toAPIString(),
+                "content": message.text
+            ]
+        }
+        
+        print("DEBUG: API messages: \(apiMessages)")
+        
         let body: [String: Any] = [
             "model": "mistral-small-latest",
-            "messages": [
-                ["role": "user", "content": message]
-            ],
-            "stream": true 
+            "messages": apiMessages,
+            "stream": true
         ]
         
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         
-        let (bytes, _) = try await URLSession.shared.bytes(for: request)
+        let (bytes, response) = try await URLSession.shared.bytes(for: request)
+        print("DEBUG: Got response: \(response)")
         
         return AsyncThrowingStream { continuation in
             Task {
