@@ -16,7 +16,8 @@ struct PromptField: View {
 
     var body: some View {
         if horizontalSizeClass == .compact {
-            iPhonePromptField
+            //iPhonePromptField
+            desktopPromptField // use this until we have something better
         } else {
             desktopPromptField
         }

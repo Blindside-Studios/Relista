@@ -22,8 +22,12 @@ struct MessageModel: View {
             }
             HStack(spacing: 8) {
                 Button("Copy", systemImage: "doc.on.doc") {
+                    #if os(macOS)
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(messageText, forType: .string)
+                    #else
+                    UIPasteboard.general.string = messageText
+                    #endif
                 }
                 .buttonStyle(.borderless)
                 .labelStyle(.iconOnly)
