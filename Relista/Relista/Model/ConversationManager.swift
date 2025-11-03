@@ -89,15 +89,25 @@ class ConversationManager {
         let messagesURL = conversationsURL
             .appendingPathComponent(conversationUUID.uuidString)
             .appendingPathComponent("messages.json")
-        
+
         guard FileManager.default.fileExists(atPath: messagesURL.path) else {
             return []  // no messages yet
         }
-        
+
         let data = try Data(contentsOf: messagesURL)
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        
+
         return try decoder.decode([Message].self, from: data)
+    }
+
+    // delete a conversation and all its messages
+    static func deleteConversation(uuid: UUID) throws {
+        let conversationFolder = conversationsURL.appendingPathComponent(uuid.uuidString)
+
+        // Remove the entire conversation folder if it exists
+        if FileManager.default.fileExists(atPath: conversationFolder.path) {
+            try FileManager.default.removeItem(at: conversationFolder)
+        }
     }
 }

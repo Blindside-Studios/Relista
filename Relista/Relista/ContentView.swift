@@ -12,6 +12,15 @@ struct ContentView: View {
     @State var conversations: [Conversation] = []
     @State var selectedConversation = Conversation(id: 0, title: "New Conversation", uuid: UUID(), messages: [], lastInteracted: Date.now, modelUsed: "mistral-3b-latest", isArchived: false)
 
+    // Rename dialog state
+    @State var showingRenameDialog: Bool = false
+    @State var conversationToRename: Conversation? = nil
+    @State var renameText: String = ""
+
+    // Delete confirmation state
+    @State var showingDeleteConfirmation: Bool = false
+    @State var conversationToDelete: Conversation? = nil
+
     // Helper to sync conversation - can be called from child views
     func syncConversation() {
         syncSelectedConversation()
@@ -34,6 +43,22 @@ struct ContentView: View {
                     .onTapGesture {
                         loadConversation(conv)
                     }
+                    .contextMenu {
+                        Button {
+                            conversationToRename = conv
+                            renameText = conv.title
+                            showingRenameDialog = true
+                        } label: {
+                            Label("Rename", systemImage: "pencil")
+                        }
+
+                        Button(role: .destructive) {
+                            conversationToDelete = conv
+                            showingDeleteConfirmation = true
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
                 }
             }
             .navigationTitle("Chats")
@@ -49,7 +74,29 @@ struct ContentView: View {
             }
         }
         .onChange(of: selectedConversation, syncSelectedConversation)
-        
+        .alert("Rename Conversation", isPresented: $showingRenameDialog) {
+            TextField("Conversation Name", text: $renameText)
+            Button("Cancel", role: .cancel) {
+                conversationToRename = nil
+                renameText = ""
+            }
+            Button("Rename") {
+                renameConversation()
+            }
+        } message: {
+            Text("Enter a new name for this conversation")
+        }
+        .alert("Delete Conversation", isPresented: $showingDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {
+                conversationToDelete = nil
+            }
+            Button("Delete", role: .destructive) {
+                deleteConversation()
+            }
+        } message: {
+            Text("Are you sure you want to delete this conversation? This action cannot be undone.")
+        }
+
         #if os(iOS)
         .toolbar {
             ToolbarItem(placement: .navigation) {
@@ -95,6 +142,48 @@ struct ContentView: View {
                 print("Error saving index: \(error)")
             }
         }
+    }
+
+    func renameConversation() {
+        guard let conv = conversationToRename, !renameText.isEmpty else { return }
+
+        conv.title = renameText
+
+        // Save index with updated title
+        do {
+            try ConversationManager.saveIndex(conversations: conversations)
+        } catch {
+            print("Error saving renamed conversation: \(error)")
+        }
+
+        // Clean up state
+        conversationToRename = nil
+        renameText = ""
+    }
+
+    func deleteConversation() {
+        guard let conv = conversationToDelete else { return }
+
+        // Remove from conversations array
+        if let index = conversations.firstIndex(where: { $0.uuid == conv.uuid }) {
+            conversations.remove(at: index)
+        }
+
+        // If we're deleting the currently selected conversation, switch to default
+        if selectedConversation === conv {
+            selectedConversation = Conversation(id: 0, title: "New Conversation", uuid: UUID(), messages: [], lastInteracted: Date.now, modelUsed: "ministral-3b-latest", isArchived: false)
+        }
+
+        // Delete from disk
+        do {
+            try ConversationManager.deleteConversation(uuid: conv.uuid)
+            try ConversationManager.saveIndex(conversations: conversations)
+        } catch {
+            print("Error deleting conversation: \(error)")
+        }
+
+        // Clean up state
+        conversationToDelete = nil
     }
 }
 
