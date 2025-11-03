@@ -14,11 +14,22 @@ struct ContentView: View {
     
     var body: some View {
         NavigationSplitView {
-            ForEach (conversations) { conv in
-                Text(conv.title)
+            ScrollView{
+                ForEach (conversations) { conv in
+                    HStack{
+                        Text(conv.title)
+                        Spacer()
+                    }
+                    .padding(8)
+                    .background(selectedConversation == conv ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(.clear))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, -4)
+                    .contentShape(Rectangle())
                     .onTapGesture {
                         loadConversation(conv)
                     }
+                }
             }
             .navigationTitle("Chats")
         } detail: {
