@@ -64,6 +64,13 @@ struct ContentView: View {
             .navigationTitle("Chats")
         } detail: {
             ChatWindow(conversation: selectedConversation, onConversationChanged: syncSelectedConversation)
+                .toolbar(){
+                    ToolbarItemGroup() {
+                        Button("New chat", systemImage: "square.and.pencil"){
+                            selectedConversation = Conversation(id: 0, title: "New Conversation", uuid: UUID(), messages: [], lastInteracted: Date.now, modelUsed: "ministral-3b-latest", isArchived: false)
+                        }
+                    }
+                }
         }
         .onAppear(){
             do {
