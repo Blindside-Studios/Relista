@@ -9,8 +9,8 @@ import SwiftUI
 
 struct ContentView: View {
     @State var showingSettings: Bool = false
-    @State var conversations: [Conversation] = []
-    @State var selectedConversation = Conversation(id: 0, title: "New Conversation", uuid: UUID(), messages: [], lastInteracted: Date.now, modelUsed: "mistral-3b-latest", isArchived: false)
+    @State var chatCache = ChatCache.shared
+    @State var selectedConversationUUID: UUID?
 
     // Rename dialog state
     @State var showingRenameDialog: Bool = false
@@ -21,27 +21,22 @@ struct ContentView: View {
     @State var showingDeleteConfirmation: Bool = false
     @State var conversationToDelete: Conversation? = nil
 
-    // Helper to sync conversation - can be called from child views
-    func syncConversation() {
-        syncSelectedConversation()
-    }
-
     var body: some View {
         NavigationSplitView {
             ScrollView{
-                ForEach (conversations) { conv in
+                ForEach (chatCache.conversations) { conv in
                     HStack{
                         Text(conv.title)
                         Spacer()
                     }
                     .padding(8)
-                    .background(selectedConversation === conv ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(.clear))
+                    .background(selectedConversationUUID == conv.uuid ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(.clear))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                     .padding(.horizontal, 4)
                     .padding(.vertical, -4)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        loadConversation(conv)
+                        loadConversation(conv.uuid)
                     }
                     .contextMenu {
                         Button {
@@ -63,24 +58,26 @@ struct ContentView: View {
             }
             .navigationTitle("Chats")
         } detail: {
-            ChatWindow(conversation: selectedConversation, onConversationChanged: syncSelectedConversation)
-                .toolbar(){
-                    ToolbarItemGroup() {
-                        Button("New chat", systemImage: "square.and.pencil"){
-                            selectedConversation = Conversation(id: 0, title: "New Conversation", uuid: UUID(), messages: [], lastInteracted: Date.now, modelUsed: "ministral-3b-latest", isArchived: false)
+            if let uuid = selectedConversationUUID {
+                ChatWindow(conversationUUID: uuid)
+                    .toolbar(){
+                        ToolbarItemGroup() {
+                            Button("New chat", systemImage: "square.and.pencil"){
+                                createNewConversation()
+                            }
                         }
                     }
-                }
-        }
-        .onAppear(){
-            do {
-                try ConversationManager.initializeStorage()
-                conversations = try ConversationManager.loadIndex()
-            } catch {
-                print("Error loading: \(error)")
+            } else {
+                Text("Select a conversation or create a new one")
+                    .toolbar(){
+                        ToolbarItemGroup() {
+                            Button("New chat", systemImage: "square.and.pencil"){
+                                createNewConversation()
+                            }
+                        }
+                    }
             }
         }
-        .onChange(of: selectedConversation, syncSelectedConversation)
         .alert("Rename Conversation", isPresented: $showingRenameDialog) {
             TextField("Conversation Name", text: $renameText)
             Button("Cancel", role: .cancel) {
@@ -118,57 +115,37 @@ struct ContentView: View {
         #endif
     }
     
-    func loadConversation(_ conv: Conversation) {
-        do {
-            // Since Conversation is now a class, we directly modify it
-            conv.messages = try ConversationManager.loadMessages(for: conv.uuid)
-            selectedConversation = conv
-        } catch {
-            print("Error loading messages: \(error)")
+    func createNewConversation() {
+        // Unmark previous conversation as being viewed
+        if let previousUUID = selectedConversationUUID {
+            chatCache.setViewing(uuid: previousUUID, isViewing: false)
         }
-    }
-    
-    func syncSelectedConversation(){
-        if selectedConversation.messages.count > 0 { // do not attempt to save when the conversation is blank
-            if let index = conversations.firstIndex(where: { $0.uuid == selectedConversation.uuid }) {
-                // Since it's a class, the conversation in the array is already updated by reference
-                // We just need to ensure the reference is correct
-                if conversations[index] !== selectedConversation {
-                    conversations[index] = selectedConversation
-                }
-            } else {
-                // New conversation - add to list
-                // Find highest existing id and add 1 to never assign an id twice
-                let maxId = conversations.map { $0.id }.max() ?? -1
-                selectedConversation.id = maxId + 1
-                if selectedConversation.messages.count > 0 { selectedConversation.title = selectedConversation.messages[0].text }
-                conversations.append(selectedConversation)
-            }
 
-            // Save index
-            do {
-                try ConversationManager.saveIndex(conversations: conversations)
-            } catch {
-                print("Error saving index: \(error)")
-            }
+        // Create new conversation
+        let newConversation = chatCache.createConversation()
+        selectedConversationUUID = newConversation.uuid
+
+        // Mark new conversation as being viewed
+        chatCache.setViewing(uuid: newConversation.uuid, isViewing: true)
+    }
+
+    func loadConversation(_ uuid: UUID) {
+        // Unmark previous conversation as being viewed
+        if let previousUUID = selectedConversationUUID {
+            chatCache.setViewing(uuid: previousUUID, isViewing: false)
         }
+
+        // Switch to new conversation
+        selectedConversationUUID = uuid
+
+        // Mark new conversation as being viewed (this loads it into cache)
+        chatCache.setViewing(uuid: uuid, isViewing: true)
     }
 
     func renameConversation() {
         guard let conv = conversationToRename, !renameText.isEmpty else { return }
 
-        conv.title = renameText
-        
-        if selectedConversation === conv {
-            selectedConversation.title = renameText
-        }
-
-        // Save index with updated title
-        do {
-            try ConversationManager.saveIndex(conversations: conversations)
-        } catch {
-            print("Error saving renamed conversation: \(error)")
-        }
+        chatCache.renameConversation(uuid: conv.uuid, to: renameText)
 
         // Clean up state
         conversationToRename = nil
@@ -178,23 +155,13 @@ struct ContentView: View {
     func deleteConversation() {
         guard let conv = conversationToDelete else { return }
 
-        // Remove from conversations array
-        if let index = conversations.firstIndex(where: { $0.uuid == conv.uuid }) {
-            conversations.remove(at: index)
+        // If we're deleting the currently selected conversation, clear selection
+        if selectedConversationUUID == conv.uuid {
+            selectedConversationUUID = nil
         }
 
-        // If we're deleting the currently selected conversation, switch to default
-        if selectedConversation === conv {
-            selectedConversation = Conversation(id: 0, title: "New Conversation", uuid: UUID(), messages: [], lastInteracted: Date.now, modelUsed: "ministral-3b-latest", isArchived: false)
-        }
-
-        // Delete from disk
-        do {
-            try ConversationManager.deleteConversation(uuid: conv.uuid)
-            try ConversationManager.saveIndex(conversations: conversations)
-        } catch {
-            print("Error deleting conversation: \(error)")
-        }
+        // Delete from cache and disk
+        chatCache.deleteConversation(uuid: conv.uuid)
 
         // Clean up state
         conversationToDelete = nil

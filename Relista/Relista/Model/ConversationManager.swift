@@ -66,21 +66,21 @@ class ConversationManager {
     }
     
     // save messages for a specific conversation
-    static func saveMessages(for conversation: Conversation) throws {
+    static func saveMessages(for conversationUUID: UUID, messages: [Message]) throws {
         // create conversation folder if needed
-        let conversationFolder = conversationsURL.appendingPathComponent(conversation.uuid.uuidString)
-        
+        let conversationFolder = conversationsURL.appendingPathComponent(conversationUUID.uuidString)
+
         if !FileManager.default.fileExists(atPath: conversationFolder.path) {
             try FileManager.default.createDirectory(at: conversationFolder, withIntermediateDirectories: true)
         }
-        
+
         // save messages.json
         let messagesURL = conversationFolder.appendingPathComponent("messages.json")
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = .prettyPrinted
-        
-        let data = try encoder.encode(conversation.messages)
+
+        let data = try encoder.encode(messages)
         try data.write(to: messagesURL)
     }
     
