@@ -86,7 +86,6 @@ struct PromptField: View {
         }
 
         // Use ChatCache to send message and handle generation
-        inputMessage = "Sending message to \(selectedModel.modelID)"
         chatCache.sendMessage(
             modelName: selectedModel.modelID,
             input,

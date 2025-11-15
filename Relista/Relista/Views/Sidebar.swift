@@ -24,15 +24,24 @@ struct Sidebar: View {
     var body: some View {
         ScrollView{
             VStack(spacing: 0){
-                HStack{
-                    Text("🐙 New chat")
-                    Spacer()
-                }
-                .padding(8)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    selectedConversationID = ConversationManager.createNewConversation(fromID: selectedConversationID)
+                Group
+                {
+                    let convo = chatCache.conversations.first(where: { $0.id == selectedConversationID })
+                    let isEmpty = convo?.hasMessages == false
+                    HStack{
+                        Text("🐙 New chat")
+                        Spacer()
+                    }
+                    .padding(8)
+                    .background(isEmpty
+                                ? AnyShapeStyle(.thickMaterial)
+                                : AnyShapeStyle(.clear)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        selectedConversationID = ConversationManager.createNewConversation(fromID: selectedConversationID)
+                    }
                 }
                 
                 Divider()
