@@ -22,24 +22,22 @@ struct Sidebar: View {
     @State var conversationToDelete: Conversation? = nil
     
     var body: some View {
-        List{
-            HStack{
-                Text("🐙 New chat")
-                Spacer()
-            }
-            .padding(8)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .padding(.horizontal, 4)
-            .padding(.vertical, -4)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                selectedConversationID = ConversationManager.createNewConversation(fromID: selectedConversationID)
-            }
-            
-            Divider()
-                .padding()
-
-            ScrollView{
+        ScrollView{
+            VStack(spacing: 0){
+                HStack{
+                    Text("🐙 New chat")
+                    Spacer()
+                }
+                .padding(8)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    selectedConversationID = ConversationManager.createNewConversation(fromID: selectedConversationID)
+                }
+                
+                Divider()
+                    .padding(8)
+                
                 ForEach (chatCache.conversations.filter { $0.hasMessages && !$0.isArchived }) { conv in
                     HStack{
                         Text(conv.title)
@@ -48,8 +46,6 @@ struct Sidebar: View {
                     .padding(8)
                     .background(selectedConversationID == conv.id ? AnyShapeStyle(.thickMaterial) : AnyShapeStyle(.clear))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, -4)
                     .contentShape(Rectangle())
                     .onTapGesture {
                         loadConversation(conv.id)
@@ -96,6 +92,7 @@ struct Sidebar: View {
                 Text("Are you sure you want to delete this conversation? This action cannot be undone.")
             }
         }
+        .padding(8)
     }
 
     func loadConversation(_ id: UUID) {
