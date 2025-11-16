@@ -11,6 +11,7 @@ struct ContentView: View {
     @State var showingSettings: Bool = false
     @State var chatCache = ChatCache.shared
     @State var selectedConversationID: UUID? = ConversationManager.createNewConversation(fromID: nil)
+    @State var inputMessage = "" // put this here so switching between layouts doesn't clear it
     
     @State private var columnVisibility: NavigationSplitViewVisibility = {
             #if os(iOS)
@@ -21,11 +22,11 @@ struct ContentView: View {
         }()
 
     var body: some View {
-        NavigationSplitView(columnVisibility: $columnVisibility) {
+        UnifiedSplitView {
             Sidebar(showingSettings: $showingSettings, chatCache: $chatCache, selectedConversationID: $selectedConversationID)
-        } detail: {
+        } content: {
             if let id = selectedConversationID {
-                ChatWindow(conversationID: id)
+                ChatWindow(conversationID: id, inputMessage: $inputMessage)
                     .toolbar(){
                         ToolbarItemGroup() {
                             Button("New chat", systemImage: "square.and.pencil"){

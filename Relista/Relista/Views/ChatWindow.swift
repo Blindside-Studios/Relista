@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ChatWindow: View {
     let conversationID: UUID
-    @State var inputMessage: String = ""
+    @Binding var inputMessage: String
     @State private var chatCache = ChatCache.shared
 
     var body: some View {
