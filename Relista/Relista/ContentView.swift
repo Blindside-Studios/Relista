@@ -39,26 +39,6 @@ struct ContentView: View {
     }
 }
 
-
-
-
-
-
-/*
- // for later when adding settings to iOS
- #if os(iOS)
-.toolbar {
-    ToolbarItem(placement: .navigation) {
-        Button(action: { showingSettings = true }) {
-            Image(systemName: "gearshape")
-        }
-    }
-}
-.sheet(isPresented: $showingSettings) {
-    SettingsView()
-}
-#endif*/
-
 #Preview {
     //ContentView(selectedConversation: Conversation(from: <#any Decoder#>))
 }

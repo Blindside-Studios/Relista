@@ -18,14 +18,20 @@ struct ChatWindow: View {
                 let chat = chatCache.getChat(for: conversationID)
 
                 ScrollView(.vertical){
-                    ForEach(chat.messages){ message in
-                        if(message.role == .assistant){
-                            MessageModel(messageText: message.text)
-                        }
-                        else if (message.role == .user){
-                            MessageUser(messageText: message.text, availableWidth: geo.size.width)
+                    VStack{
+                        ForEach(chat.messages){ message in
+                            if(message.role == .assistant){
+                                MessageModel(messageText: message.text)
+                            }
+                            else if (message.role == .user){
+                                MessageUser(messageText: message.text, availableWidth: geo.size.width)
+                            }
                         }
                     }
+                    // to center-align
+                    .frame(maxWidth: .infinity)
+                    .frame(maxWidth: 740)
+                    .frame(maxWidth: .infinity)
                 }
                 .safeAreaInset(edge: .bottom, spacing: 0){
                     PromptField(conversationID: conversationID, inputMessage: $inputMessage)

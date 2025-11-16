@@ -24,26 +24,25 @@ struct UnifiedSplitView<Sidebar: View, Content: View>: View {
     }
     
     var body: some View {
-        Group{
+        NavigationStack{ // so the toolbar displays
+            #if os(iOS)
             if hSizeClass == .compact {
-                NavigationStack{ // so the toolbar displays
-                    ChatSplitView(isOpen: $isSidebarOpen) {
-                        sidebar
-                    } content: {
-                        content
-                            .toolbar {
-                                ToolbarItem(placement: .topBarLeading) {
-                                    Button {
-                                        withAnimation(.spring) {
-                                            isSidebarOpen.toggle()
-                                        }
-                                    } label: {
-                                        Image(systemName: "sidebar.left")
+                ChatSplitView(isOpen: $isSidebarOpen) {
+                    sidebar
+                } content: {
+                    content
+                        .toolbar {
+                            ToolbarItem(placement: .topBarLeading) {
+                                Button {
+                                    withAnimation(.spring) {
+                                        isSidebarOpen.toggle()
                                     }
+                                } label: {
+                                    Image(systemName: "sidebar.left")
                                 }
                             }
-                            .navigationTitle("")
-                    }
+                        }
+                        .navigationTitle("")
                 }
                 
             } else {
@@ -54,6 +53,13 @@ struct UnifiedSplitView<Sidebar: View, Content: View>: View {
                     content
                 }
             }
+            #else
+            NavigationSplitView {
+                sidebar
+            } detail: {
+                content
+            }
+            #endif
         }
         .onAppear(){
             if hSizeClass == .compact {

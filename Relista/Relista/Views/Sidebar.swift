@@ -102,6 +102,33 @@ struct Sidebar: View {
             }
         }
         .padding(8)
+        #if os(iOS)
+        .safeAreaInset(edge: .bottom, spacing: 0){
+            HStack{
+                Button {
+                    showingSettings.toggle()
+                } label: {
+                    Label("Settings", systemImage: "gear")
+                        .padding(.horizontal)
+                        .contentShape(Rectangle())
+                }
+                .sheet(isPresented: $showingSettings) {
+                    NavigationStack{
+                        SettingsView()
+                            .toolbar {
+                                ToolbarItem(placement: .topBarTrailing) {
+                                    Button(role: .close){
+                                        showingSettings = false
+                                    }
+                                }
+                            }
+                            .navigationTitle("Settings")
+                    }
+                }
+                Spacer()
+            }
+        }
+        #endif
     }
 
     func loadConversation(_ id: UUID) {

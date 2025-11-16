@@ -56,8 +56,12 @@ struct PromptField: View {
             }
         }
         .padding()
-        .glassEffect(in: .rect(cornerRadius: 16))
-        .padding()
+        .glassEffect(in: .rect(cornerRadius: 18))
+        // to center-align
+        .frame(maxWidth: .infinity)
+        .frame(maxWidth: 750)
+        .frame(maxWidth: .infinity)
+        .padding(8)
         
         #if os(iOS) // only show this on iOS because the other platforms use a popover
         .sheet(isPresented: $showModelPickerSheet) {
