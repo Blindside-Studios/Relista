@@ -9,6 +9,12 @@ import SwiftUI
 
 @main
 struct RelistaApp: App {
+    init() {
+        Task {
+            await ModelList.loadModels()
+        }
+    }
+    
     var body: some Scene {
         WindowGroup {
             ContentView()

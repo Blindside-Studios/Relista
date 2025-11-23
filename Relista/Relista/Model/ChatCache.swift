@@ -227,7 +227,8 @@ class ChatCache {
 
         Task {
             do {
-                let service = MistralService(apiKey: apiKey)
+                //let service = MistralService(apiKey: apiKey)
+                let service = OpenRouter(apiKey: apiKey)
                 let stream = try await service.streamMessage(messages: chat.messages, modelName: modelName)
 
                 // Create blank assistant message

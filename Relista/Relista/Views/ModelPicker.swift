@@ -41,5 +41,5 @@ struct ModelPicker: View {
 }
 
 #Preview {
-    ModelPicker(selectedModel: .constant(AIModel(name: "Mistral Medium", modelID: "mistral-medium-latest", provider: .mistral, family: "Mistral", specifier: "Medium")), isOpen: .constant(true))
+    ModelPicker(selectedModel: .constant(AIModel(name: "Mistral Medium", modelID: "mistral-medium-latest", provider: .mistral, family: "Mistral", specifier: "Medium", isFree: false)), isOpen: .constant(true))
 }

@@ -12,7 +12,7 @@ struct PromptField: View {
     @State var showModelPickerPopOver = false
     let conversationID: UUID
     @Binding var inputMessage: String
-    @AppStorage("APIKeyMistral") private var apiKey: String = ""
+    @AppStorage("APIKeyOpenRouter") private var apiKey: String = ""
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @State private var chatCache = ChatCache.shared
     

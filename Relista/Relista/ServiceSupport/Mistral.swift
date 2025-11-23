@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct MistralService {
+/*struct MistralService {
     let apiKey: String
     
     func generateChatName(messages: [Message]) async throws -> String {
@@ -113,4 +113,4 @@ struct MistralService {
             }
         }
     }
-}
+}*/

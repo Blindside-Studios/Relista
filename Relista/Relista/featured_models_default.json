@@ -1,0 +1,230 @@
+[
+  {
+    "name": "GPT 5.1",
+    "modelID": "openai/gpt-5.1",
+    "provider": "OpenAI",
+    "family": "GPT",
+    "specifier": "5.1",
+    "isFree": false
+  },
+  {
+    "name": "GPT 5.1 Chat",
+    "modelID": "openai/gpt-5.1-chat",
+    "provider": "OpenAI",
+    "family": "GPT",
+    "specifier": "5.1 Chat",
+    "isFree": false
+  },
+  {
+    "name": "openai/gpt-oss-120b",
+    "modelID": "openai/gpt-oss-120b",
+    "provider": "OpenAI",
+    "family": "gpt-oss",
+    "specifier": "120B",
+    "isFree": false
+  },
+  {
+    "name": "openai/gpt-oss-20b",
+    "modelID": "openai/gpt-oss-20b",
+    "provider": "OpenAI",
+    "family": "gpt-oss",
+    "specifier": "20B",
+    "isFree": true
+  },
+  {
+    "name": "o3",
+    "modelID": "openai/o3",
+    "provider": "OpenAI",
+    "family": "o3",
+    "specifier": null,
+    "isFree": false
+  },
+  {
+    "name": "o4 Mini",
+    "modelID": "openai/o4-mini",
+    "provider": "OpenAI",
+    "family": "o4",
+    "specifier": "mini",
+    "isFree": false
+  },
+  {
+    "name": "GPT 4.1",
+    "modelID": "openai/gpt-4.1",
+    "provider": "OpenAI",
+    "family": "GPT",
+    "specifier": "4.1",
+    "isFree": false
+  },
+  {
+    "name": "GPT 4o",
+    "modelID": "openai/gpt-4o",
+    "provider": "OpenAI",
+    "family": "GPT",
+    "specifier": "4o",
+    "isFree": false
+  },
+  {
+    "name": "GPT 4o Mini",
+    "modelID": "openai/gpt-4o-mini",
+    "provider": "OpenAI",
+    "family": "GPT",
+    "specifier": "4o mini",
+    "isFree": false
+  },
+
+  {
+    "name": "Claude Haiku 4.5",
+    "modelID": "anthropic/claude-haiku-4.5",
+    "provider": "Anthropic",
+    "family": "Claude",
+    "specifier": "Haiku 4.5",
+    "isFree": false
+  },
+  {
+    "name": "Claude Sonnet 4.5",
+    "modelID": "anthropic/claude-sonnet-4.5",
+    "provider": "Anthropic",
+    "family": "Claude",
+    "specifier": "Sonnet 4.5",
+    "isFree": false
+  },
+  {
+    "name": "Claude Opus 4.1",
+    "modelID": "anthropic/claude-opus-4.1",
+    "provider": "Anthropic",
+    "family": "Claude",
+    "specifier": "Opus 4.1",
+    "isFree": false
+  },
+
+  {
+    "name": "Gemini 3 Pro Preview",
+    "modelID": "google/gemini-3-pro-preview",
+    "provider": "Google",
+    "family": "Gemini",
+    "specifier": "3 Pro Preview",
+    "isFree": false
+  },
+  {
+    "name": "Gemini 2.5 Flash",
+    "modelID": "google/gemini-2.5-flash",
+    "provider": "Google",
+    "family": "Gemini",
+    "specifier": "2.5 Flash",
+    "isFree": false
+  },
+  {
+    "name": "Gemini 2.5 Pro",
+    "modelID": "google/gemini-2.5-pro",
+    "provider": "Google",
+    "family": "Gemini",
+    "specifier": "2.5 Pro",
+    "isFree": false
+  },
+  {
+    "name": "Gemma 3 27B",
+    "modelID": "google/gemma-3-27b-it",
+    "provider": "Google",
+    "family": "Gemma",
+    "specifier": "3 27B",
+    "isFree": true
+  },
+
+  {
+    "name": "DeepSeek V3.1 Terminus",
+    "modelID": "deepseek/deepseek-v3.1-terminus",
+    "provider": "DeepSeek",
+    "family": "DeepSeek",
+    "specifier": "V3.1 Terminus",
+    "isFree": false
+  },
+  {
+    "name": "DeepSeek Chat V3.1",
+    "modelID": "deepseek/deepseek-chat-v3.1",
+    "provider": "DeepSeek",
+    "family": "DeepSeek",
+    "specifier": "Chat V3.1",
+    "isFree": false
+  },
+  {
+    "name": "DeepSeek R1 0528",
+    "modelID": "deepseek/deepseek-r1-0528",
+    "provider": "DeepSeek",
+    "family": "DeepSeek",
+    "specifier": "R1",
+    "isFree": true
+  },
+
+  {
+    "name": "Mistral Medium 3.1",
+    "modelID": "mistralai/mistral-medium-3.1",
+    "provider": "Mistral",
+    "family": "Mistral",
+    "specifier": "Medium 3.1",
+    "isFree": false
+  },
+  {
+    "name": "Mistral Small 3.2 24B",
+    "modelID": "mistralai/mistral-small-3.2-24b-instruct",
+    "provider": "Mistral",
+    "family": "Mistral",
+    "specifier": "Small 3.2",
+    "isFree": true
+  },
+  {
+    "name": "Magistral Small",
+    "modelID": "mistralai/magistral-small-2506",
+    "provider": "Mistral",
+    "family": "Magistral",
+    "specifier": "Small",
+    "isFree": false
+  },
+  {
+    "name": "Magistral Medium",
+    "modelID": "mistralai/magistral-medium-2506",
+    "provider": "Mistral",
+    "family": "Magistral",
+    "specifier": "Medium",
+    "isFree": false
+  },
+  {
+    "name": "Mistral Small 3",
+    "modelID": "mistralai/mistral-small-24b-instruct-2501",
+    "provider": "Mistral",
+    "family": "Mistral",
+    "specifier": "Small 3",
+    "isFree": false
+  },
+  {
+    "name": "Mistral Large",
+    "modelID": "mistralai/mistral-large-2411",
+    "provider": "Mistral",
+    "family": "Mistral",
+    "specifier": "Large",
+    "isFree": false
+  },
+  {
+    "name": "Ministral 3B",
+    "modelID": "mistralai/ministral-3b",
+    "provider": "Mistral",
+    "family": "Ministral",
+    "specifier": "3B",
+    "isFree": false
+  },
+  {
+    "name": "Mistral NeMo",
+    "modelID": "mistralai/mistral-nemo",
+    "provider": "Mistral",
+    "family": "Mistral",
+    "specifier": "NeMo",
+    "isFree": true
+  },
+  {
+    "name": "Mistral 7B Instruct",
+    "modelID": "mistralai/mistral-7b-instruct",
+    "provider": "Mistral",
+    "family": "Mistral",
+    "specifier": "7B Instruct",
+    "isFree": true
+  }
+]

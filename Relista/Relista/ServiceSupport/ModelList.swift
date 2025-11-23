@@ -7,39 +7,115 @@
 
 import Foundation
 
-enum ModelProvider: String, CaseIterable{
+enum ModelProvider: String, CaseIterable, Decodable {
     case openAI = "OpenAI"
     case mistral = "Mistral"
     case anthropic = "Anthropic"
     case perplexity = "Perplexity"
+    case google = "Google"
+    case deepSeek = "DeepSeek"
+    case uncategorized = "Uncategorized"
 }
 
-struct AIModel: Identifiable, Hashable{
-    let id = UUID()
+struct AIModel: Identifiable, Hashable {
+    var id = UUID()
     let name: String
     let modelID: String
     let provider: ModelProvider
     
     let family: String?
     let specifier: String?
+    
+    let isFree: Bool
+}
+
+struct RemoteAIModel: Codable {
+    let name: String
+    let modelID: String
+    let provider: String
+    let family: String?
+    let specifier: String?
+    let isFree: Bool
+    
+    func toLocal() -> AIModel? {
+        let providerEnum = ModelProvider(rawValue: provider) ?? .uncategorized
+        
+        return AIModel(
+            id: UUID(),
+            name: name,
+            modelID: modelID,
+            provider: providerEnum,
+            family: family,
+            specifier: specifier,
+            isFree: isFree
+        )
+    }
 }
 
 class ModelList{
-    static let Models: [AIModel] = [
-        AIModel(name: "Mistral Medium",   modelID: "mistral-medium-latest",   provider: .mistral, family: "Mistral",   specifier: "Medium"),
-        AIModel(name: "Magistral Medium", modelID: "magistral-medium-latest", provider: .mistral, family: "Magistral", specifier: "Medium"),
-        AIModel(name: "Mistral Small",    modelID: "mistral-small-latest",    provider: .mistral, family: "Mistral",   specifier: "Small"),
-        AIModel(name: "Magistral Small",  modelID: "magistral-small-latest",  provider: .mistral, family: "Magistral", specifier: "Small"),
-        AIModel(name: "Mistral Large",    modelID: "mistral-large-latest",    provider: .mistral, family: "Mistral",   specifier: "Large"),
+    static var Models: [AIModel] = [AIModel(name: "Mistral Medium",   modelID: "mistralai/mistral-medium-latest",   provider: .mistral, family: "Mistral",   specifier: "Medium", isFree: false)]
+    
+    @MainActor
+    static func loadModels() async {
+        if await updateFromRemote() {
+            if let models = loadFromCache() {
+                Models = models.compactMap { $0.toLocal() }
+                return
+            }
+        }
 
-        AIModel(name: "Codestral",        modelID: "codestral-latest",        provider: .mistral, family: nil,         specifier: nil),
-        AIModel(name: "Mistral NeMo",     modelID: "open-mistral-nemo",       provider: .mistral, family: "Mistral",   specifier: "NeMo"),
-        AIModel(name: "Mistral 7B",       modelID: "open-mistral-7b",         provider: .mistral, family: "Mistral",   specifier: "7B"),
+        if let models = loadFromCache() {
+            Models = models.compactMap { $0.toLocal() }
+            return
+        }
 
-        AIModel(name: "Mixtral 8x7B",     modelID: "open-mixtral-8x7b",       provider: .mistral, family: "Mixtral",   specifier: "8x7B"),
-        AIModel(name: "Mixtral 8x22B",    modelID: "open-mixtral-8x22b",      provider: .mistral, family: "Mixtral",   specifier: "8x22B"),
-
-        AIModel(name: "Ministral 8B",     modelID: "ministral-8b-latest",     provider: .mistral, family: "Ministral", specifier: "8B"),
-        AIModel(name: "Ministral 3B",     modelID: "ministral-3b-latest",     provider: .mistral, family: "Ministral", specifier: "3B")
-    ]
+        Models = loadBundledDefaults()
+    }
+    
+    private static let remoteModelURL = URL(string: "https://raw.githubusercontent.com/Blindside-Studios/Relista/refs/heads/main/featured_models.json")!
+    
+    private static var cacheFileURL: URL {
+        let dir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        return dir.appendingPathComponent("models.json")
+    }
+    
+    private static func updateFromRemote() async -> Bool {
+        do {
+            let (data, response) = try await URLSession.shared.data(from: remoteModelURL)
+            
+            guard let http = response as? HTTPURLResponse,
+                  (200..<300).contains(http.statusCode) else {
+                return false
+            }
+            
+            _ = try JSONDecoder().decode([RemoteAIModel].self, from: data)
+            
+            try data.write(to: cacheFileURL, options: .atomic)
+            
+            return true
+        } catch {
+            return false
+        }
+    }
+    
+    private static func loadFromCache() -> [RemoteAIModel]? {
+        do {
+            let data = try Data(contentsOf: cacheFileURL)
+            return try JSONDecoder().decode([RemoteAIModel].self, from: data)
+        } catch {
+            return nil
+        }
+    }
+    
+    private static func loadBundledDefaults() -> [AIModel] {
+        debugPrint("Loading Local Preset")
+        guard let url = Bundle.main.url(forResource: "featured_models_default", withExtension: "json"),
+              let data = try? Data(contentsOf: url),
+              let decoded = try? JSONDecoder().decode([RemoteAIModel].self, from: data)
+        else {
+            debugPrint("Returning existing variable instead")
+            return Models
+        }
+        return decoded.compactMap { $0.toLocal() }
+    }
 }
