@@ -32,8 +32,8 @@ struct OpenRouter {
         let systemMessage = [
             "role": "user",
             "content": """
-            Create a short title (max 3 words) describing the topic of the FIRST user message and the FIRST assistant reply.
-            Only the title.
+            Create a short title (3 words, max 4 words) describing the topic of the FIRST user message and the FIRST assistant reply.
+            Only the title. No quotation marks.
             Same language as the user.
             """
         ]
