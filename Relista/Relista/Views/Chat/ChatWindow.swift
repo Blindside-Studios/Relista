@@ -11,7 +11,9 @@ struct ChatWindow: View {
     let conversationID: UUID
     @Binding var inputMessage: String
     @State private var chatCache = ChatCache.shared
-
+    
+    @State private var scrollWithAnimation = false
+    
     var body: some View {
         ZStack{
             GeometryReader { geo in
@@ -23,14 +25,18 @@ struct ChatWindow: View {
                             ForEach(chat.messages){ message in
                                 if(message.role == .assistant){
                                     MessageModel(messageText: message.text)
-                                        .frame(minHeight: message.id == chat.messages.filter { $0.role == .assistant }.last!.id ? geo.size.height * 0.7 : 0)
+                                        .frame(minHeight: message.id == chat.messages.last!.id ? geo.size.height * 0.8 : 0)
                                         .id(message.id)
-                                        .onAppear(){
-                                            proxy.scrollTo(chat.messages.last!.id)
-                                        }
                                 }
                                 else if (message.role == .user){
                                     MessageUser(messageText: message.text, availableWidth: geo.size.width)
+                                        .frame(minHeight: message.id == chat.messages.last!.id ? geo.size.height * 0.8 : 0)
+                                        .id(message.id)
+                                        .onAppear(){
+                                            withAnimation(.easeInOut(duration: scrollWithAnimation ? 0.35 : 0)) {
+                                                proxy.scrollTo(chat.messages.last!.id)
+                                            }
+                                        }
                                 }
                             }
                         }
@@ -42,10 +48,20 @@ struct ChatWindow: View {
                     .safeAreaInset(edge: .bottom, spacing: 0){
                         PromptField(conversationID: conversationID, inputMessage: $inputMessage)
                     }
+                    //.onChange(of: chat.id, chatChanged)
+                    //.onChange(of: inputMessage, textChanged)
                 }
             }
         }
     }
+    
+    //func chatChanged(){
+    //    scrollWithAnimation = false
+    //}
+    //
+    //func textChanged(){
+    //    scrollWithAnimation = true
+    //}
 }
 
 #Preview {

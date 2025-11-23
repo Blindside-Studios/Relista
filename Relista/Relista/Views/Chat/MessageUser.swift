@@ -12,15 +12,20 @@ struct MessageUser: View {
     let availableWidth: CGFloat
     
     var body: some View {
-        HStack {
-            Spacer(minLength: availableWidth * 0.2)
+        VStack{
+            HStack {
+                Spacer(minLength: availableWidth * 0.2)
+                
+                Text(messageText)
+                    .padding()
+                    .glassEffect(in: .rect(cornerRadius: 25.0))
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .padding(.horizontal)
             
-            Text(messageText)
-                .padding()
-                .glassEffect(in: .rect(cornerRadius: 25.0))
+            Spacer()
+                .frame(minWidth: 0)
         }
-        .frame(maxWidth: .infinity, alignment: .trailing)
-        .padding(.horizontal)
     }
 }
 
