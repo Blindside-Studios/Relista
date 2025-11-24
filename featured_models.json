@@ -89,11 +89,11 @@
     "isFree": false
   },
   {
-    "name": "Claude Opus 4.1",
-    "modelID": "anthropic/claude-opus-4.1",
+    "name": "Claude Opus 4.5",
+    "modelID": "anthropic/claude-opus-4.5",
     "provider": "Anthropic",
     "family": "Claude",
-    "specifier": "Opus 4.1",
+    "specifier": "Opus 4.5",
     "isFree": false
   },
 
