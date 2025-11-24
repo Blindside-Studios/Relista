@@ -9,17 +9,22 @@ import SwiftUI
 
 struct SettingsView: View {
     @State private var selection: SettingsItem? = .apiProvider
+    @AppStorage("AlwaysShowFullModelMessageToolbar") private var alwaysShowFullModelMessageToolbar: Bool = false
         
         var body: some View {
             NavigationSplitView {
-                List(SettingsItem.allCases, selection: $selection) { item in
-                    NavigationLink(value: item) {
-                        Label {
-                            Text(item.title)
-                        } icon: {
-                            Image(systemName: item.systemImage)
+                List(selection: $selection) {
+                    ForEach(SettingsItem.allCases, id: \.self) { item in
+                        NavigationLink(value: item) {
+                            Label {
+                                Text(item.title)
+                            } icon: {
+                                Image(systemName: item.systemImage)
+                            }
                         }
                     }
+
+                    Toggle("Always show time and model", isOn: $alwaysShowFullModelMessageToolbar)
                 }
                 .navigationTitle("Settings")
             } detail: {

@@ -11,6 +11,9 @@ import MarkdownUI
 struct MessageModel: View {
     let message: Message
     
+    @AppStorage("AlwaysShowFullModelMessageToolbar") private var toolbarExpansionPreference: Bool = false
+    @State private var isToolbarExpanded: Bool = false
+    
     var body: some View {
         VStack{
             HStack {
@@ -31,7 +34,7 @@ struct MessageModel: View {
                 } label: {
                     Label("Copy", systemImage: "doc.on.doc")
                         .contentShape(Rectangle())
-                        .scaleEffect(0.7)
+                        .scaleEffect(0.8)
                 }
                 .buttonStyle(.plain)
                 .labelStyle(.iconOnly)
@@ -41,17 +44,32 @@ struct MessageModel: View {
                 } label: {
                     Label("Regenerate", systemImage: "arrow.clockwise")
                         .contentShape(Rectangle())
-                        .scaleEffect(0.7)
+                        .scaleEffect(0.8)
                 }
                 .buttonStyle(.plain)
                 .labelStyle(.iconOnly)
                 
-                Divider()
-                    .frame(height:12)
-                Text(formatMessageTimestamp(message.timeStamp))
-                Divider()
-                    .frame(height:12)
-                Text(message.modelUsed)
+                if (isToolbarExpanded){
+                    Divider()
+                        .frame(height:12)
+                    Text(formatMessageTimestamp(message.timeStamp))
+                    Divider()
+                        .frame(height:12)
+                    Text(message.modelUsed)
+                }
+                
+                Button {
+                    withAnimation(.bouncy(duration: 0.3, extraBounce: 0.05)) {
+                        isToolbarExpanded.toggle()
+                    }
+                } label: {
+                    Label("Expand/Collapse toolbar", systemImage: "chevron.forward")
+                        .contentShape(Rectangle())
+                        .scaleEffect(0.8)
+                        .rotationEffect(isToolbarExpanded ? Angle(degrees: -180) : Angle(degrees: 0))
+                }
+                .buttonStyle(.plain)
+                .labelStyle(.iconOnly)
                 
                 Spacer()
             }
@@ -64,6 +82,9 @@ struct MessageModel: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal)
+        .onAppear(){
+            if toolbarExpansionPreference {isToolbarExpanded = true}
+        }
     }
     
     func formatMessageTimestamp(_ date: Date) -> String {
