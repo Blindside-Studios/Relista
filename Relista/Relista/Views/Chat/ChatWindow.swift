@@ -45,6 +45,7 @@ struct ChatWindow: View {
                         .frame(maxWidth: 740)
                         .frame(maxWidth: .infinity)
                     }
+                    .scrollDismissesKeyboard(.interactively)
                     .safeAreaInset(edge: .bottom, spacing: 0){
                         PromptField(conversationID: conversationID, inputMessage: $inputMessage)
                     }

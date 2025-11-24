@@ -24,6 +24,16 @@ struct PromptField: View {
                 .lineLimit(1...10)
                 .textFieldStyle(.plain)
                 .onSubmit(sendMessage)
+                .onKeyPress { keyPress in
+                    if keyPress.modifiers == .shift
+                        && keyPress.key == .return
+                    {
+                        inputMessage += "\n"
+                        return .handled
+                    } else {
+                        return .ignored
+                    }
+                }
             
             HStack(spacing: 12) {
                 Group{
@@ -106,12 +116,6 @@ struct PromptField: View {
                 )
         }
         #endif
-        /*if horizontalSizeClass == .compact {
-            //iPhonePromptField
-            desktopPromptField // use this until we have something better
-        } else {
-            desktopPromptField
-        }*/
     }
     
     
