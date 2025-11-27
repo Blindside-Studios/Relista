@@ -19,6 +19,7 @@ struct MessageUser: View {
                 Text(message.text)
                     .padding()
                     .glassEffect(in: .rect(cornerRadius: 25.0))
+                    .foregroundStyle(message.role == .system ? Color.orange : Color.primary)
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
             .padding(.horizontal)

@@ -198,7 +198,7 @@ class ChatCache {
         guard let conversation = getConversation(for: conversationID) else { return }
 
         // If this is the first message, mark conversation as having messages
-        let isChatNew = chat.messages.isEmpty
+        let isChatNew = !conversation.hasMessages
         if isChatNew {
             conversation.hasMessages = true
             // Save index immediately so it appears in sidebar
@@ -286,6 +286,27 @@ class ChatCache {
                 }
             }
         }
+    }
+    
+    func sendMessageAsSystem(
+        inputText: String,
+        to conversationID: UUID,
+        ) {
+        let chat = getChat(for: conversationID)
+        guard let conversation = getConversation(for: conversationID) else { return }
+
+        // Add user message
+        let userMsg = Message(
+            id: UUID(),
+            text: inputText,
+            role: .system,
+            attachmentLinks: [],
+            timeStamp: .now
+        )
+        chat.messages.append(userMsg)
+
+        // Save system message immediately
+            if conversation.hasMessages { saveMessages(for: conversationID)}
     }
 
     // MARK: - Persistence

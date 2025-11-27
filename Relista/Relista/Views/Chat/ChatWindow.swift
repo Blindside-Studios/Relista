@@ -12,7 +12,7 @@ struct ChatWindow: View {
     @Binding var inputMessage: String
     @State private var chatCache = ChatCache.shared
     
-    @State private var scrollWithAnimation = false
+    @State private var scrollWithAnimation = true
     
     var body: some View {
         ZStack{
@@ -28,7 +28,7 @@ struct ChatWindow: View {
                                         .frame(minHeight: message.id == chat.messages.last!.id ? geo.size.height * 0.8 : 0)
                                         .id(message.id)
                                 }
-                                else if (message.role == .user){
+                                else if (message.role == .user || message.role == .system){
                                     MessageUser(message: message, availableWidth: geo.size.width)
                                         .frame(minHeight: message.id == chat.messages.last!.id ? geo.size.height * 0.8 : 0)
                                         .id(message.id)

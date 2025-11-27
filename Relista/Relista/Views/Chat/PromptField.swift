@@ -90,6 +90,13 @@ struct PromptField: View {
                 .buttonStyle(.borderedProminent)
                 .labelStyle(.iconOnly)
                 .buttonBorderShape(.circle)
+                .contextMenu {
+                    Button {
+                        sendMessageAsSystem()
+                    } label: {
+                        Label("Send as system message", systemImage: "exclamationmark.bubble")
+                    }
+                }
             }
         }
         .padding()
@@ -133,6 +140,15 @@ struct PromptField: View {
             to: conversationID,
             apiKey: apiKey
         )
+    }
+    
+    func sendMessageAsSystem(){
+        let input = inputMessage
+        inputMessage = ""
+        DispatchQueue.main.async {
+        }
+        
+        chatCache.sendMessageAsSystem(inputText: input, to: conversationID)
     }
 
     func appendDummyMessages(){
