@@ -14,6 +14,8 @@ struct MessageModel: View {
     @AppStorage("AlwaysShowFullModelMessageToolbar") private var toolbarExpansionPreference: Bool = false
     @State private var isToolbarExpanded: Bool = false
     
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    
     var body: some View {
         VStack{
             HStack {
@@ -81,7 +83,7 @@ struct MessageModel: View {
                 .frame(minHeight: 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal)
+        .padding(.horizontal, horizontalSizeClass == .compact ? 0 : 8)
         .onAppear(){
             if toolbarExpansionPreference {isToolbarExpanded = true}
         }
