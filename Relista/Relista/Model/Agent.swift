@@ -37,10 +37,6 @@ public class AgentManager: ObservableObject {
         documentsURL.appendingPathComponent("Relista")
     }
     
-    private var agentsURL: URL {
-        relistaURL.appendingPathComponent("agents")
-    }
-    
     private var fileURL: URL {
         relistaURL.appendingPathComponent("agents.json")
     }
@@ -50,10 +46,6 @@ public class AgentManager: ObservableObject {
         
         if !fileManager.fileExists(atPath: relistaURL.path) {
             try fileManager.createDirectory(at: relistaURL, withIntermediateDirectories: true)
-        }
-        
-        if !fileManager.fileExists(atPath: agentsURL.path) {
-            try fileManager.createDirectory(at: agentsURL, withIntermediateDirectories: true)
         }
     }
     
@@ -79,7 +71,7 @@ public class AgentManager: ObservableObject {
     }
     
     static func createNewAgent() -> Agent {
-        return Agent(name: "", description: "", icon: "", model: "mistral-small-latest", systemPrompt: "", temperature: 0.3, shownInSidebar: true)
+        return Agent(name: "", description: "", icon: "", model: "mistralai/mistral-medium-3.1", systemPrompt: "", temperature: 0.3, shownInSidebar: true)
     }
     
     static func getAgent(fromUUID: UUID) -> Agent?{
