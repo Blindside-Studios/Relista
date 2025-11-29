@@ -295,6 +295,7 @@ class CloudKitSyncManager: ObservableObject {
 
     private func mergeAgents(cloudAgents: [Agent]) {
         var mergedAgents = AgentManager.shared.customAgents
+        let cloudAgentIDs = Set(cloudAgents.map { $0.id })
 
         // Update or add cloud agents with timestamp-based conflict resolution
         for cloudAgent in cloudAgents {
@@ -308,6 +309,11 @@ class CloudKitSyncManager: ObservableObject {
                 // New agent from cloud
                 mergedAgents.append(cloudAgent)
             }
+        }
+
+        // Remove local agents that don't exist in cloud (were deleted on another device)
+        mergedAgents.removeAll { localAgent in
+            !cloudAgentIDs.contains(localAgent.id)
         }
 
         AgentManager.shared.customAgents = mergedAgents
@@ -384,6 +390,7 @@ class CloudKitSyncManager: ObservableObject {
 
     private func mergeConversations(cloudConversations: [Conversation]) {
         var mergedConversations = ChatCache.shared.conversations
+        let cloudConversationIDs = Set(cloudConversations.map { $0.id })
 
         for cloudConversation in cloudConversations {
             if let index = mergedConversations.firstIndex(where: { $0.id == cloudConversation.id }) {
@@ -396,6 +403,20 @@ class CloudKitSyncManager: ObservableObject {
                 // New conversation from cloud
                 mergedConversations.append(cloudConversation)
             }
+        }
+
+        // Remove local conversations that don't exist in cloud (were deleted on another device)
+        let conversationsToDelete = mergedConversations.filter { localConversation in
+            !cloudConversationIDs.contains(localConversation.id)
+        }
+
+        // Delete local files for removed conversations
+        for conversation in conversationsToDelete {
+            try? ConversationManager.deleteConversation(id: conversation.id)
+        }
+
+        mergedConversations.removeAll { localConversation in
+            !cloudConversationIDs.contains(localConversation.id)
         }
 
         ChatCache.shared.conversations = mergedConversations
