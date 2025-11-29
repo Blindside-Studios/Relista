@@ -20,9 +20,10 @@ struct Sidebar: View {
     // Delete confirmation state
     @State var showingDeleteConfirmation: Bool = false
     @State var conversationToDelete: Conversation? = nil
-    
+
     @ObservedObject private var agentManager = AgentManager.shared
-    
+    @ObservedObject private var syncManager = CloudKitSyncManager.shared
+
     var body: some View {
         let currentConversation = chatCache.conversations.first { $0.id == selectedConversationID }
         let isCurrentEmpty = currentConversation?.hasMessages == false
@@ -137,6 +138,25 @@ struct Sidebar: View {
                 }
             }
             .navigationTitle("Chats")
+            #if os(macOS)
+            .toolbar {
+                ToolbarItem(placement: .automatic) {
+                    if syncManager.isSyncing {
+                        ProgressView()
+                            .controlSize(.small)
+                    } else {
+                        Button {
+                            Task {
+                                await performSync()
+                            }
+                        } label: {
+                            Label("Refresh", systemImage: "arrow.clockwise")
+                        }
+                        .keyboardShortcut("r", modifiers: .command)
+                    }
+                }
+            }
+            #endif
             .alert("Rename Conversation", isPresented: $showingRenameDialog) {
                 TextField("Conversation Name", text: $renameText)
                 Button("Cancel", role: .cancel) {
@@ -159,6 +179,9 @@ struct Sidebar: View {
             } message: {
                 Text("Are you sure you want to delete this conversation? This action cannot be undone.")
             }
+        }
+        .refreshable {
+            await performSync()
         }
         .padding(8)
         #if os(iOS)
@@ -217,6 +240,14 @@ struct Sidebar: View {
         }
         chatCache.deleteConversation(id: conv.id)
         conversationToDelete = nil
+    }
+
+    func performSync() async {
+        do {
+            try await CloudKitSyncManager.shared.performFullSync()
+        } catch {
+            print("Sync error: \(error)")
+        }
     }
 }
 
