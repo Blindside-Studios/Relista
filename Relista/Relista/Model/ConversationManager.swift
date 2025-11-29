@@ -44,14 +44,18 @@ class ConversationManager {
     
     // save index.json (without messages)
     // Only saves conversations that have messages - filters out empty conversations
-    static func saveIndex(conversations: [Conversation]) throws {
+    static func saveIndex(conversations: [Conversation], changedConversationID: UUID? = nil, syncToCloudKit: Bool = true) throws {
         // Filter to only include conversations with messages
         let conversationsToSave = conversations.filter { $0.hasMessages }
 
-        // Clean up folders for conversations that don't have messages
+        // Clean up LOCAL folders for conversations that don't have messages
+        // (but DON'T delete from CloudKit - that's handled separately)
         let conversationsToRemove = conversations.filter { !$0.hasMessages }
         for conversation in conversationsToRemove {
-            try? deleteConversation(id: conversation.id)
+            let conversationFolder = conversationsURL.appendingPathComponent(conversation.id.uuidString)
+            if FileManager.default.fileExists(atPath: conversationFolder.path) {
+                try? FileManager.default.removeItem(at: conversationFolder)
+            }
         }
 
         let encoder = JSONEncoder()
@@ -60,6 +64,15 @@ class ConversationManager {
 
         let data = try encoder.encode(conversationsToSave)
         try data.write(to: indexURL)
+
+        // Sync conversations to CloudKit (unless called from sync itself)
+        if syncToCloudKit {
+            // Only mark the specific conversation that changed (if provided)
+            if let changedID = changedConversationID {
+                CloudKitSyncManager.shared.markConversationChanged(changedID)
+            }
+            CloudKitSyncManager.shared.debouncedPush()
+        }
     }
     
     // load index.json
@@ -76,7 +89,7 @@ class ConversationManager {
     }
     
     // save messages for a specific conversation
-    static func saveMessages(for conversationID: UUID, messages: [Message]) throws {
+    static func saveMessages(for conversationID: UUID, messages: [Message], syncToCloudKit: Bool = true) throws {
         // create conversation folder if needed
         let conversationFolder = conversationsURL.appendingPathComponent(conversationID.uuidString)
 
@@ -92,6 +105,12 @@ class ConversationManager {
 
         let data = try encoder.encode(messages)
         try data.write(to: messagesURL)
+
+        // Sync messages to CloudKit (unless called from CloudKit sync itself)
+        if syncToCloudKit {
+            CloudKitSyncManager.shared.markMessagesChanged(for: conversationID)
+            CloudKitSyncManager.shared.debouncedPush()
+        }
     }
 
     // load messages for a specific conversation
@@ -118,6 +137,15 @@ class ConversationManager {
         // Remove the entire conversation folder if it exists
         if FileManager.default.fileExists(atPath: conversationFolder.path) {
             try FileManager.default.removeItem(at: conversationFolder)
+        }
+
+        // Delete from CloudKit
+        Task {
+            do {
+                try await CloudKitSyncManager.shared.deleteConversation(id)
+            } catch {
+                print("Error deleting conversation from CloudKit: \(error)")
+            }
         }
     }
     

@@ -85,9 +85,12 @@ class ChatCache {
         guard let conversation = getConversation(for: id) else { return }
         let chat = getChat(for: id)
 
+        // Update lastModified before saving
+        conversation.lastModified = Date.now
+
         // Save index
         do {
-            try ConversationManager.saveIndex(conversations: conversations)
+            try ConversationManager.saveIndex(conversations: conversations, changedConversationID: id)
         } catch {
             print("Error saving conversation index: \(error)")
         }
@@ -97,9 +100,10 @@ class ChatCache {
     func renameConversation(id: UUID, to newTitle: String) {
         guard let conversation = getConversation(for: id) else { return }
         conversation.title = newTitle
+        conversation.lastModified = Date.now
 
         do {
-            try ConversationManager.saveIndex(conversations: conversations)
+            try ConversationManager.saveIndex(conversations: conversations, changedConversationID: id)
         } catch {
             print("Error saving renamed conversation: \(error)")
         }
@@ -197,16 +201,24 @@ class ChatCache {
         let chat = getChat(for: conversationID)
         guard let conversation = getConversation(for: conversationID) else { return }
 
+        // Debug: Log conversation state BEFORE any changes
+        print("📨 sendMessage called for conversation \(conversationID.uuidString.prefix(8))")
+        print("  Before: hasMessages=\(conversation.hasMessages), messages.count=\(chat.messages.count)")
+
         // If this is the first message, mark conversation as having messages
         let isChatNew = !conversation.hasMessages
         if isChatNew {
+            print("  🆕 This is the FIRST message for this conversation")
             conversation.hasMessages = true
             // Save index immediately so it appears in sidebar
             do {
-                try ConversationManager.saveIndex(conversations: conversations)
+                try ConversationManager.saveIndex(conversations: conversations, changedConversationID: conversationID)
+                print("  ✓ Index saved (hasMessages now true)")
             } catch {
-                print("Error saving conversation index: \(error)")
+                print("  ❌ Error saving conversation index: \(error)")
             }
+        } else {
+            print("  ↩️ Conversation already has messages (hasMessages=true)")
         }
 
         // Add user message
@@ -215,13 +227,24 @@ class ChatCache {
             text: inputText,
             role: .user,
             attachmentLinks: [],
-            timeStamp: .now
+            timeStamp: .now,
+            lastModified: Date.now
         )
         chat.messages.append(userMsg)
         conversation.lastInteracted = Date.now
+        conversation.lastModified = Date.now
 
         // Save user message immediately
         saveMessages(for: conversationID)
+        print("  ✓ Message saved to disk (now \(chat.messages.count) total messages)")
+
+        // Debug: Verify message was actually written to disk
+        if let diskMessages = try? ConversationManager.loadMessages(for: conversationID) {
+            print("  📁 Verified on disk: \(diskMessages.count) messages")
+            if diskMessages.count != chat.messages.count {
+                print("  ⚠️ MISMATCH: Memory has \(chat.messages.count) but disk has \(diskMessages.count)")
+            }
+        }
 
         // Start generation
         chat.isGenerating = true
@@ -239,7 +262,8 @@ class ChatCache {
                     role: .assistant,
                     modelUsed: modelName,
                     attachmentLinks: [],
-                    timeStamp: .now
+                    timeStamp: .now,
+                    lastModified: Date.now
                 )
 
                 await MainActor.run {
@@ -254,6 +278,7 @@ class ChatCache {
                         // Update message text
                         var updatedMessage = chat.messages[assistantIndex]
                         updatedMessage.text += chunk
+                        updatedMessage.lastModified = Date.now
                         chat.messages[assistantIndex] = updatedMessage
                     }
                 }
@@ -265,6 +290,7 @@ class ChatCache {
                     // Update conversation metadata
                     if let conversation = getConversation(for: conversationID) {
                         conversation.lastInteracted = Date.now
+                        conversation.lastModified = Date.now
                     }
 
                     saveMessages(for: conversationID)
@@ -277,7 +303,7 @@ class ChatCache {
                 
                 if isChatNew { try? conversation.title = await service.generateChatName(messages: chat.messages) }
                 // save again to make sure it saves our chat title
-                try? ConversationManager.saveIndex(conversations: conversations)
+                try? ConversationManager.saveIndex(conversations: conversations, changedConversationID: conversationID)
 
             } catch {
                 await MainActor.run {
@@ -302,10 +328,12 @@ class ChatCache {
             text: inputText,
             role: .system,
             attachmentLinks: [],
-            timeStamp: .now
+            timeStamp: .now,
+            lastModified: Date.now
         )
         chat.messages.append(userMsg)
         conversation.lastInteracted = Date.now
+        conversation.lastModified = Date.now
 
         // Save system message immediately
             if conversation.hasMessages { saveMessages(for: conversationID)}
