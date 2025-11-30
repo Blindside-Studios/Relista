@@ -25,6 +25,8 @@ struct Sidebar: View {
 
     @ObservedObject private var agentManager = AgentManager.shared
     @ObservedObject private var syncManager = CloudKitSyncManager.shared
+    
+    @AppStorage("CustomAgentsInSidebarAreExpanded") private var showCustomAgents: Bool = true
 
     var body: some View {
         let currentConversation = chatCache.conversations.first { $0.id == selectedConversationID }
@@ -55,35 +57,56 @@ struct Sidebar: View {
                     selectedAgent = nil
                 }
                 
-                ForEach(agentManager.customAgents.filter { $0.shownInSidebar }) { agent in
-                    let isCurrentAgent = selectedAgent == agent.id
-
-                    HStack {
-                        Text(agent.icon + " " + agent.name)
+                if showCustomAgents{
+                    ForEach(agentManager.customAgents.filter { $0.shownInSidebar }) { agent in
+                        let isCurrentAgent = selectedAgent == agent.id
+                        
+                        HStack {
+                            Text(agent.icon + " " + agent.name)
+                            Spacer()
+                        }
+                        .padding(8)
+                        .background {
+                            if isCurrentEmpty && isCurrentAgent {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(.thickMaterial)
+                            } else {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(.clear)
+                            }
+                        }
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            let result = ConversationManager.createNewConversation(
+                                fromID: selectedConversationID,
+                                withAgent: agent.id
+                            )
+                            selectedConversationID = result.newChatUUID
+                            selectedAgent = agent.id
+                            if agent.model != nil { selectedModel = agent.model! }
+                        }
+                    }
+                }
+                Button{
+                    withAnimation(.bouncy(duration: 0.3, extraBounce: 0.05)) {
+                        showCustomAgents.toggle()
+                    }
+                } label: {
+                    HStack{
+                        Label("Expand/collapse Squidlet list", systemImage: "chevron.down")
+                            .rotationEffect(showCustomAgents ? Angle(degrees: -180) : Angle(degrees: 0))
+                            .animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: showCustomAgents)
+                        Text("Squidlets")
                         Spacer()
                     }
                     .padding(8)
-                    .background {
-                        if isCurrentEmpty && isCurrentAgent {
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(.thickMaterial)
-                        } else {
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(.clear)
-                        }
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        let result = ConversationManager.createNewConversation(
-                            fromID: selectedConversationID,
-                            withAgent: agent.id
-                        )
-                        selectedConversationID = result.newChatUUID
-                        selectedAgent = agent.id
-                        if agent.model != nil { selectedModel = agent.model! }
-                    }
                 }
+                .opacity(0.8)
+                .contentShape(Rectangle())
+                .buttonStyle(.plain)
+                .labelStyle(.iconOnly)
+                .backgroundStyle(.clear)
                                 
                 Divider()
                     .padding(8)
@@ -137,6 +160,9 @@ struct Sidebar: View {
                     }
                 }
             }
+            .animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: showCustomAgents)
+            //.animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: chatCache.conversations)
+            //.animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: agentManager.customAgents)
             .navigationTitle("Chats")
             #if os(macOS)
             .toolbar {
