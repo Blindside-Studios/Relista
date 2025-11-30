@@ -22,7 +22,7 @@ struct ChatWindow: View {
                 ScrollViewReader { proxy in
                     ScrollView(.vertical){
                         VStack{
-                            ForEach(chat.messages){ message in
+                            ForEach(chat.messages.sorted { $0.timeStamp < $1.timeStamp }){ message in
                                 if(message.role == .assistant){
                                     MessageModel(message: message)
                                         .frame(minHeight: message.id == chat.messages.last!.id ? geo.size.height * 0.8 : 0)

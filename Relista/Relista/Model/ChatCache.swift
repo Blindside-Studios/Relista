@@ -291,11 +291,10 @@ class ChatCache {
                     chat.isGenerating = false
 
                     // Update conversation metadata
-                    if let conversation = getConversation(for: conversationID) {
-                        conversation.lastInteracted = Date.now
-                        conversation.lastModified = Date.now
-                    }
-
+                    chat.messages[chat.messages.count - 1].timeStamp = .now
+                    conversation.lastInteracted = Date.now
+                    conversation.lastModified = Date.now
+                    
                     saveMessages(for: conversationID)
                     syncConversation(id: conversationID)
                     onCompletion?()
