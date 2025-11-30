@@ -23,6 +23,7 @@ class CloudKitSyncManager: ObservableObject {
     private let agentRecordType = "Agent"
     private let conversationRecordType = "Conversation"
     private let messageRecordType = "Message"
+    private let deletionRecordType = "DeletionRecord"
 
     // Debounce mechanism to prevent too many rapid CloudKit calls
     private var pendingPushTask: Task<Void, Never>?
@@ -171,6 +172,8 @@ class CloudKitSyncManager: ObservableObject {
 
     /// Pulls all changes from CloudKit
     private func pullAllChanges() async throws {
+        // Pull deletions first so we don't fetch data we're about to delete
+        try await pullDeletions()
         try await pullAgents()
         try await pullConversations()
         // Messages are now pulled on-demand when conversations are viewed
@@ -307,8 +310,12 @@ class CloudKitSyncManager: ObservableObject {
     }
 
     func deleteAgent(_ agentID: UUID) async throws {
+        // Delete the actual agent record
         let recordID = CKRecord.ID(recordName: agentID.uuidString)
-        try await privateDatabase.deleteRecord(withID: recordID)
+        try? await privateDatabase.deleteRecord(withID: recordID)
+
+        // Create a deletion tombstone so other devices know to delete it
+        try await pushDeletion(recordID: agentID, recordType: "Agent")
     }
 
     private func mergeAgents(cloudAgents: [Agent]) {
@@ -422,11 +429,15 @@ class CloudKitSyncManager: ObservableObject {
     }
 
     func deleteConversation(_ conversationID: UUID) async throws {
+        // Delete the actual conversation record
         let recordID = CKRecord.ID(recordName: conversationID.uuidString)
-        try await privateDatabase.deleteRecord(withID: recordID)
+        try? await privateDatabase.deleteRecord(withID: recordID)
 
-        // Also delete associated messages
-        try await deleteMessagesForConversation(conversationID)
+        // Delete associated messages (they get cleaned up automatically, no tombstones needed)
+        try? await deleteMessagesForConversation(conversationID)
+
+        // Create a deletion tombstone so other devices know to delete it
+        try await pushDeletion(recordID: conversationID, recordType: "Conversation")
     }
 
     private func mergeConversations(cloudConversations: [Conversation]) {
@@ -769,6 +780,90 @@ class CloudKitSyncManager: ObservableObject {
         )
     }
 
+    // MARK: - Deletion Tracking (Tombstones)
+
+    /// Creates a tombstone record to track deletions across devices
+    private func pushDeletion(recordID: UUID, recordType: String) async throws {
+        let deletionRecord = CKRecord(recordType: deletionRecordType)
+        deletionRecord["deletedRecordID"] = recordID.uuidString as CKRecordValue
+        deletionRecord["deletedRecordType"] = recordType as CKRecordValue
+        deletionRecord["deletionDate"] = Date.now as CKRecordValue
+
+        do {
+            _ = try await privateDatabase.save(deletionRecord)
+            print("  🪦 Created deletion tombstone for \(recordType) \(recordID.uuidString.prefix(8))")
+        } catch {
+            print("  ⚠️ Failed to create deletion tombstone: \(error)")
+        }
+    }
+
+    /// Pulls deletion records and removes deleted items from local storage
+    private func pullDeletions() async throws {
+        // Only fetch deletions from the last 30 days to avoid unbounded growth
+        let thirtyDaysAgo = Date.now.addingTimeInterval(-30 * 24 * 60 * 60)
+        let predicate = NSPredicate(format: "deletionDate > %@", thirtyDaysAgo as NSDate)
+        let query = CKQuery(recordType: deletionRecordType, predicate: predicate)
+
+        let results = try await privateDatabase.records(matching: query)
+
+        var agentDeletions: [UUID] = []
+        var conversationDeletions: [UUID] = []
+
+        for (_, result) in results.matchResults {
+            switch result {
+            case .success(let record):
+                guard let deletedIDString = record["deletedRecordID"] as? String,
+                      let deletedID = UUID(uuidString: deletedIDString),
+                      let deletedType = record["deletedRecordType"] as? String else {
+                    continue
+                }
+
+                switch deletedType {
+                case "Agent":
+                    agentDeletions.append(deletedID)
+                case "Conversation":
+                    conversationDeletions.append(deletedID)
+                default:
+                    break
+                }
+            case .failure(let error):
+                print("  ⚠️ Error fetching deletion record: \(error)")
+            }
+        }
+
+        if !agentDeletions.isEmpty || !conversationDeletions.isEmpty {
+            print("📥 Found \(agentDeletions.count) agent deletion(s), \(conversationDeletions.count) conversation deletion(s)")
+        }
+
+        // Apply deletions on main thread
+        await MainActor.run {
+            // Delete agents
+            for agentID in agentDeletions {
+                if let index = AgentManager.shared.customAgents.firstIndex(where: { $0.id == agentID }) {
+                    let agentName = AgentManager.shared.customAgents[index].name
+                    print("  🗑️ Removing agent '\(agentName)' (deleted on another device)")
+                    AgentManager.shared.customAgents.remove(at: index)
+                }
+            }
+            if !agentDeletions.isEmpty {
+                try? AgentManager.shared.saveAgents(syncToCloudKit: false)
+            }
+
+            // Delete conversations
+            for conversationID in conversationDeletions {
+                if let index = ChatCache.shared.conversations.firstIndex(where: { $0.id == conversationID }) {
+                    let conversationTitle = ChatCache.shared.conversations[index].title
+                    print("  🗑️ Removing conversation '\(conversationTitle)' (deleted on another device)")
+                    ChatCache.shared.conversations.remove(at: index)
+                    try? ConversationManager.deleteConversation(id: conversationID)
+                }
+            }
+            if !conversationDeletions.isEmpty {
+                try? ConversationManager.saveIndex(conversations: ChatCache.shared.conversations, syncToCloudKit: false)
+            }
+        }
+    }
+
     // MARK: - CloudKit Subscriptions (Real-time Sync)
 
     /// Sets up CloudKit subscriptions for push notifications when data changes
@@ -779,6 +874,7 @@ class CloudKitSyncManager: ObservableObject {
         try await setupSubscription(for: agentRecordType, subscriptionID: "agent-changes")
         try await setupSubscription(for: conversationRecordType, subscriptionID: "conversation-changes")
         try await setupSubscription(for: messageRecordType, subscriptionID: "message-changes")
+        try await setupSubscription(for: deletionRecordType, subscriptionID: "deletion-changes")
 
         print("CloudKit subscriptions set up successfully")
     }
