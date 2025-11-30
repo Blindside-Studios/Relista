@@ -57,8 +57,8 @@ struct ContentView: View {
         selectedAgent = result.newAgent
         if result.newAgent != nil {
             let agent = AgentManager.getAgent(fromUUID: result.newAgent!)
-            if agent != nil && agent!.model != nil{
-                selectedModel = agent!.model!
+            if agent != nil {
+                selectedModel = agent!.model
             }
         }
     }

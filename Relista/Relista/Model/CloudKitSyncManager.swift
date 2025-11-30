@@ -248,7 +248,7 @@ class CloudKitSyncManager: ObservableObject {
                 existingRecord["name"] = agent.name as CKRecordValue
                 existingRecord["description"] = agent.description as CKRecordValue
                 existingRecord["icon"] = agent.icon as CKRecordValue
-                existingRecord["model"] = (agent.model ?? "") as CKRecordValue
+                existingRecord["model"] = agent.model as CKRecordValue
                 existingRecord["systemPrompt"] = agent.systemPrompt as CKRecordValue
                 existingRecord["temperature"] = agent.temperature as CKRecordValue
                 existingRecord["shownInSidebar"] = (agent.shownInSidebar ? 1 : 0) as CKRecordValue
@@ -312,7 +312,7 @@ class CloudKitSyncManager: ObservableObject {
     func deleteAgent(_ agentID: UUID) async throws {
         // Delete the actual agent record
         let recordID = CKRecord.ID(recordName: agentID.uuidString)
-        try? await privateDatabase.deleteRecord(withID: recordID)
+        _ = try? await privateDatabase.deleteRecord(withID: recordID)
 
         // Create a deletion tombstone so other devices know to delete it
         try await pushDeletion(recordID: agentID, recordType: "Agent")
@@ -431,7 +431,7 @@ class CloudKitSyncManager: ObservableObject {
     func deleteConversation(_ conversationID: UUID) async throws {
         // Delete the actual conversation record
         let recordID = CKRecord.ID(recordName: conversationID.uuidString)
-        try? await privateDatabase.deleteRecord(withID: recordID)
+        _ = try? await privateDatabase.deleteRecord(withID: recordID)
 
         // Delete associated messages (they get cleaned up automatically, no tombstones needed)
         try? await deleteMessagesForConversation(conversationID)
@@ -614,7 +614,7 @@ class CloudKitSyncManager: ObservableObject {
         let results = try await privateDatabase.records(matching: query)
 
         for (recordID, _) in results.matchResults {
-            try? await privateDatabase.deleteRecord(withID: recordID)
+            _ = try? await privateDatabase.deleteRecord(withID: recordID)
         }
     }
 
@@ -661,7 +661,7 @@ class CloudKitSyncManager: ObservableObject {
         record["name"] = agent.name as CKRecordValue
         record["description"] = agent.description as CKRecordValue
         record["icon"] = agent.icon as CKRecordValue
-        record["model"] = (agent.model ?? "") as CKRecordValue
+        record["model"] = (agent.model) as CKRecordValue
         record["systemPrompt"] = agent.systemPrompt as CKRecordValue
         record["temperature"] = agent.temperature as CKRecordValue
         record["shownInSidebar"] = (agent.shownInSidebar ? 1 : 0) as CKRecordValue
@@ -680,7 +680,7 @@ class CloudKitSyncManager: ObservableObject {
             throw NSError(domain: "CloudKitSyncManager", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid agent record"])
         }
 
-        let model = record["model"] as? String
+        let model = record["model"] as! String
         let id = UUID(uuidString: record.recordID.recordName) ?? UUID()
         let lastModified = record["lastModified"] as? Date ?? Date.now
 
@@ -689,7 +689,7 @@ class CloudKitSyncManager: ObservableObject {
             name: name,
             description: description,
             icon: icon,
-            model: model?.isEmpty == true ? nil : model,
+            model: model,
             systemPrompt: systemPrompt,
             temperature: temperature,
             shownInSidebar: shownInSidebarInt == 1,

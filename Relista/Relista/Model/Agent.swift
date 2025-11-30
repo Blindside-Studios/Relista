@@ -13,7 +13,7 @@ struct Agent: Identifiable, Hashable, Codable{
     var name: String
     var description: String
     var icon: String
-    var model: String?
+    var model: String
     var systemPrompt: String
     var temperature: Double
     var shownInSidebar: Bool
@@ -24,7 +24,7 @@ struct Agent: Identifiable, Hashable, Codable{
         case id, name, description, icon, model, systemPrompt, temperature, shownInSidebar, lastModified
     }
 
-    init(id: UUID = UUID(), name: String, description: String, icon: String, model: String?, systemPrompt: String, temperature: Double, shownInSidebar: Bool, lastModified: Date = Date.now) {
+    init(id: UUID = UUID(), name: String, description: String, icon: String, model: String, systemPrompt: String, temperature: Double, shownInSidebar: Bool, lastModified: Date = Date.now) {
         self.id = id
         self.name = name
         self.description = description
@@ -42,7 +42,7 @@ struct Agent: Identifiable, Hashable, Codable{
         name = try container.decode(String.self, forKey: .name)
         description = try container.decode(String.self, forKey: .description)
         icon = try container.decode(String.self, forKey: .icon)
-        model = try container.decodeIfPresent(String.self, forKey: .model)
+        model = try container.decode(String.self, forKey: .model)
         systemPrompt = try container.decode(String.self, forKey: .systemPrompt)
         temperature = try container.decode(Double.self, forKey: .temperature)
         shownInSidebar = try container.decode(Bool.self, forKey: .shownInSidebar)

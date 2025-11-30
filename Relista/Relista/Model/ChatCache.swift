@@ -61,7 +61,7 @@ class ChatCache {
         var model = modelUsed
         if (agentUsed != nil){
             let newModel = AgentManager.getAgent(fromUUID: agentUsed!)!.model
-            if newModel != nil { model = newModel! }
+            model = newModel
         }
         
         let newConversation = Conversation(
@@ -81,7 +81,7 @@ class ChatCache {
     /// Syncs a conversation (saves index and updates metadata)
     func syncConversation(id: UUID) {
         guard let conversation = getConversation(for: id) else { return }
-        let chat = getChat(for: id)
+        //let chat = getChat(for: id)
 
         // Update lastModified before saving
         conversation.lastModified = Date.now
@@ -157,7 +157,7 @@ class ChatCache {
             } else {
                 // Empty local cache - try pulling from CloudKit immediately
                 print("📭 No local messages for \(id.uuidString.prefix(8)) - checking CloudKit")
-                let chat = chat // Capture for async use
+                //let chat = chat // Capture for async use
                 Task {
                     try? await CloudKitSyncManager.shared.pullMessages(for: id)
                 }

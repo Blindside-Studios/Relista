@@ -104,7 +104,9 @@ struct AgentCreateView: View {
     @State private var icon = "🤖"
     @State private var systemPrompt = ""
     @State private var temperature = 1.0
-    @State private var model: String? = nil
+    @State private var model: String = ModelList.placeHolderModel
+    
+    @State private var showModelPickerPopOver: Bool = false
     
     var body: some View {
         NavigationStack {
@@ -126,7 +128,16 @@ struct AgentCreateView: View {
                 }
                 
                 Section("Model") {
-                    TextField("Model Identifier", text: Binding($model, replacingNilWith: ""))
+                    Text(model)
+                        .popover(isPresented: $showModelPickerPopOver) {
+                            ModelPicker(
+                                selectedModelSlug: $model,
+                                isOpen: $showModelPickerPopOver
+                            )
+                            .frame(minWidth: 250, maxHeight: 450)
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture{ showModelPickerPopOver.toggle() }
                 }
             }
             .navigationTitle("New Agent")
@@ -163,6 +174,8 @@ struct AgentCreateView: View {
 struct AgentDetailView: View {
     @Binding var agent: Agent
     
+    @State private var showModelPickerPopOver = false
+    
     var body: some View {
         Form {
             Section("Basics") {
@@ -173,7 +186,16 @@ struct AgentDetailView: View {
             }
             
             Section("Model") {
-                TextField("Model Identifier", text: Binding($agent.model, replacingNilWith: ""))
+                Text(agent.model)
+                    .popover(isPresented: $showModelPickerPopOver) {
+                        ModelPicker(
+                            selectedModelSlug: $agent.model,
+                            isOpen: $showModelPickerPopOver
+                        )
+                        .frame(minWidth: 250, maxHeight: 450)
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture{ showModelPickerPopOver.toggle() }
             }
             
             Section("System Prompt") {

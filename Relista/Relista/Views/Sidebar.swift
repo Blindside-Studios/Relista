@@ -84,7 +84,7 @@ struct Sidebar: View {
                             )
                             selectedConversationID = result.newChatUUID
                             selectedAgent = agent.id
-                            if agent.model != nil { selectedModel = agent.model! }
+                            if !agent.model.isEmpty { selectedModel = agent.model }
                         }
                     }
                 }
