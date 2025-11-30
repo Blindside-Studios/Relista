@@ -132,22 +132,54 @@ class ChatCache {
     // MARK: - Chat Loading/Unloading
 
     /// Loads or retrieves a chat from cache
+    /// Now supports on-demand CloudKit sync for better performance and storage efficiency
     func getChat(for id: UUID) -> LoadedChat {
         if let existing = loadedChats[id] {
+            // Already loaded - trigger background refresh from CloudKit
+            Task {
+                try? await CloudKitSyncManager.shared.pullMessages(for: id)
+            }
             return existing
         }
 
-        // Load from disk if not in memory
+        // Try loading from local disk cache first
         do {
             let messages = try ConversationManager.loadMessages(for: id)
             let chat = LoadedChat(id: id, messages: messages)
             loadedChats[id] = chat
+
+            // If we have local messages, fetch any new ones from CloudKit in background
+            if !messages.isEmpty {
+                print("📂 Loaded \(messages.count) cached message(s) for \(id.uuidString.prefix(8))")
+                Task {
+                    try? await CloudKitSyncManager.shared.pullMessages(for: id)
+                }
+            } else {
+                // Empty local cache - try pulling from CloudKit immediately
+                print("📭 No local messages for \(id.uuidString.prefix(8)) - checking CloudKit")
+                let chat = chat // Capture for async use
+                Task {
+                    try? await CloudKitSyncManager.shared.pullMessages(for: id)
+                }
+            }
+
             return chat
         } catch {
-            print("Error loading chat \(id): \(error)")
-            // Return empty chat if load fails
+            print("⚠️ No local cache for \(id.uuidString.prefix(8)): \(error)")
+            // No local cache exists - create empty chat and try CloudKit
             let chat = LoadedChat(id: id)
             loadedChats[id] = chat
+
+            // Attempt to pull from CloudKit
+            Task {
+                do {
+                    try await CloudKitSyncManager.shared.pullMessages(for: id)
+                    print("✅ Successfully pulled messages from CloudKit for \(id.uuidString.prefix(8))")
+                } catch {
+                    print("❌ Failed to pull messages from CloudKit: \(error)")
+                }
+            }
+
             return chat
         }
     }

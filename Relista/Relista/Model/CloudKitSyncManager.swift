@@ -38,6 +38,9 @@ class CloudKitSyncManager: ObservableObject {
     private var deletedAgentIDs = Set<UUID>()
     private var deletedConversationIDs = Set<UUID>()
 
+    // Track which conversations have had messages synced to avoid redundant queries
+    private var syncedConversationIDs = Set<UUID>()
+
     private init() {
         self.container = CKContainer(identifier: "iCloud.Blindside-Studios.Relista")
         self.privateDatabase = container.privateCloudDatabase
@@ -170,7 +173,8 @@ class CloudKitSyncManager: ObservableObject {
     private func pullAllChanges() async throws {
         try await pullAgents()
         try await pullConversations()
-        try await pullMessages()
+        // Messages are now pulled on-demand when conversations are viewed
+        // This dramatically improves startup performance and reduces data usage
     }
 
     /// Pushes all local data to CloudKit (used for initial sync)
@@ -266,7 +270,19 @@ class CloudKitSyncManager: ObservableObject {
     }
 
     func pullAgents() async throws {
-        let query = CKQuery(recordType: agentRecordType, predicate: NSPredicate(value: true))
+        // Use incremental sync if we have a last sync date
+        let predicate: NSPredicate
+        if let lastSync = lastSyncDate {
+            // Only fetch agents modified since last sync
+            predicate = NSPredicate(format: "lastModified > %@", lastSync as NSDate)
+            print("📥 Pulling agents modified since \(lastSync)")
+        } else {
+            // First sync - fetch everything
+            predicate = NSPredicate(value: true)
+            print("📥 Pulling all agents (first sync)")
+        }
+
+        let query = CKQuery(recordType: agentRecordType, predicate: predicate)
         let results = try await privateDatabase.records(matching: query)
 
         var cloudAgents: [Agent] = []
@@ -282,6 +298,8 @@ class CloudKitSyncManager: ObservableObject {
             }
         }
 
+        print("  Found \(cloudAgents.count) agent(s) to sync")
+
         // Merge with local agents
         await MainActor.run {
             mergeAgents(cloudAgents: cloudAgents)
@@ -295,25 +313,34 @@ class CloudKitSyncManager: ObservableObject {
 
     private func mergeAgents(cloudAgents: [Agent]) {
         var mergedAgents = AgentManager.shared.customAgents
-        let cloudAgentIDs = Set(cloudAgents.map { $0.id })
 
         // Update or add cloud agents with timestamp-based conflict resolution
         for cloudAgent in cloudAgents {
             if let index = mergedAgents.firstIndex(where: { $0.id == cloudAgent.id }) {
                 // Compare lastModified timestamps - newest wins
                 if cloudAgent.lastModified > mergedAgents[index].lastModified {
+                    print("  📝 Updating agent '\(cloudAgent.name)' from CloudKit (newer)")
                     mergedAgents[index] = cloudAgent
                 }
                 // Otherwise keep local version - it will be pushed in the next step
             } else {
                 // New agent from cloud
+                print("  ➕ Adding new agent '\(cloudAgent.name)' from CloudKit")
                 mergedAgents.append(cloudAgent)
             }
         }
 
-        // Remove local agents that don't exist in cloud (were deleted on another device)
-        mergedAgents.removeAll { localAgent in
-            !cloudAgentIDs.contains(localAgent.id)
+        // Note: With incremental sync, we don't remove agents that aren't in the result
+        // Only remove agents if we're doing a full sync (lastSyncDate == nil)
+        if lastSyncDate == nil && !cloudAgents.isEmpty {
+            let cloudAgentIDs = Set(cloudAgents.map { $0.id })
+            let removed = mergedAgents.filter { !cloudAgentIDs.contains($0.id) }
+            if !removed.isEmpty {
+                print("  🗑️ Removing \(removed.count) agent(s) not in CloudKit")
+            }
+            mergedAgents.removeAll { localAgent in
+                !cloudAgentIDs.contains(localAgent.id)
+            }
         }
 
         AgentManager.shared.customAgents = mergedAgents
@@ -358,7 +385,19 @@ class CloudKitSyncManager: ObservableObject {
     }
 
     func pullConversations() async throws {
-        let query = CKQuery(recordType: conversationRecordType, predicate: NSPredicate(value: true))
+        // Use incremental sync if we have a last sync date
+        let predicate: NSPredicate
+        if let lastSync = lastSyncDate {
+            // Only fetch conversations modified since last sync
+            predicate = NSPredicate(format: "lastModified > %@", lastSync as NSDate)
+            print("📥 Pulling conversations modified since \(lastSync)")
+        } else {
+            // First sync - fetch everything
+            predicate = NSPredicate(value: true)
+            print("📥 Pulling all conversations (first sync)")
+        }
+
+        let query = CKQuery(recordType: conversationRecordType, predicate: predicate)
         let results = try await privateDatabase.records(matching: query)
 
         var cloudConversations: [Conversation] = []
@@ -373,6 +412,8 @@ class CloudKitSyncManager: ObservableObject {
                 print("Error fetching conversation record: \(error)")
             }
         }
+
+        print("  Found \(cloudConversations.count) conversation(s) to sync")
 
         // Merge with local conversations
         await MainActor.run {
@@ -390,33 +431,42 @@ class CloudKitSyncManager: ObservableObject {
 
     private func mergeConversations(cloudConversations: [Conversation]) {
         var mergedConversations = ChatCache.shared.conversations
-        let cloudConversationIDs = Set(cloudConversations.map { $0.id })
 
         for cloudConversation in cloudConversations {
             if let index = mergedConversations.firstIndex(where: { $0.id == cloudConversation.id }) {
                 // Compare lastModified timestamps - newest wins
                 if cloudConversation.lastModified > mergedConversations[index].lastModified {
+                    print("  📝 Updating conversation '\(cloudConversation.title)' from CloudKit (newer)")
                     mergedConversations[index] = cloudConversation
                 }
                 // Otherwise keep local version - it will be pushed in the next step
             } else {
                 // New conversation from cloud
+                print("  ➕ Adding new conversation '\(cloudConversation.title)' from CloudKit")
                 mergedConversations.append(cloudConversation)
             }
         }
 
-        // Remove local conversations that don't exist in cloud (were deleted on another device)
-        let conversationsToDelete = mergedConversations.filter { localConversation in
-            !cloudConversationIDs.contains(localConversation.id)
-        }
+        // Note: With incremental sync, we don't remove conversations that aren't in the result
+        // Only remove conversations if we're doing a full sync (lastSyncDate == nil)
+        if lastSyncDate == nil && !cloudConversations.isEmpty {
+            let cloudConversationIDs = Set(cloudConversations.map { $0.id })
+            let conversationsToDelete = mergedConversations.filter { localConversation in
+                !cloudConversationIDs.contains(localConversation.id)
+            }
 
-        // Delete local files for removed conversations
-        for conversation in conversationsToDelete {
-            try? ConversationManager.deleteConversation(id: conversation.id)
-        }
+            if !conversationsToDelete.isEmpty {
+                print("  🗑️ Removing \(conversationsToDelete.count) conversation(s) not in CloudKit")
+            }
 
-        mergedConversations.removeAll { localConversation in
-            !cloudConversationIDs.contains(localConversation.id)
+            // Delete local files for removed conversations
+            for conversation in conversationsToDelete {
+                try? ConversationManager.deleteConversation(id: conversation.id)
+            }
+
+            mergedConversations.removeAll { localConversation in
+                !cloudConversationIDs.contains(localConversation.id)
+            }
         }
 
         ChatCache.shared.conversations = mergedConversations
@@ -492,7 +542,20 @@ class CloudKitSyncManager: ObservableObject {
         }
     }
 
-    func pullMessages(for conversationID: UUID) async throws {
+    /// Pulls messages for a specific conversation (called on-demand)
+    /// This is now public so ChatCache can call it when loading conversations
+    /// - Parameters:
+    ///   - conversationID: The conversation to sync messages for
+    ///   - force: If true, sync even if already synced. Default is false
+    func pullMessages(for conversationID: UUID, force: Bool = false) async throws {
+        // Skip if already synced (unless forced)
+        if !force && syncedConversationIDs.contains(conversationID) {
+            print("⏭️ Skipping message sync for \(conversationID.uuidString.prefix(8)) - already synced")
+            return
+        }
+
+        print("📥 Pulling messages for conversation \(conversationID.uuidString.prefix(8))")
+
         let predicate = NSPredicate(format: "conversationID == %@", conversationID.uuidString)
         let query = CKQuery(recordType: messageRecordType, predicate: predicate)
 
@@ -511,10 +574,15 @@ class CloudKitSyncManager: ObservableObject {
             }
         }
 
+        print("  Found \(cloudMessages.count) message(s) in CloudKit")
+
         // Merge with local messages
         await MainActor.run {
             mergeMessages(cloudMessages: cloudMessages, conversationID: conversationID)
         }
+
+        // Mark as synced
+        syncedConversationIDs.insert(conversationID)
     }
 
     func pullMessages() async throws {
@@ -765,5 +833,20 @@ class CloudKitSyncManager: ObservableObject {
             print("iCloud not available: \(error)")
             return false
         }
+    }
+
+    /// Forces a full re-sync by clearing the last sync date
+    /// This will cause the next sync to pull all data instead of just incremental changes
+    func resetSyncState() {
+        lastSyncDate = nil
+        syncedConversationIDs.removeAll()
+        UserDefaults.standard.removeObject(forKey: "lastCloudKitSync")
+        print("🔄 Sync state reset - next sync will be a full sync")
+    }
+
+    /// Clears the synced conversations cache, forcing messages to be re-fetched
+    func clearSyncedConversationsCache() {
+        syncedConversationIDs.removeAll()
+        print("🧹 Cleared synced conversations cache")
     }
 }
