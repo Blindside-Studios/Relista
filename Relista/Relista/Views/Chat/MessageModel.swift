@@ -13,6 +13,7 @@ struct MessageModel: View {
     
     @AppStorage("AlwaysShowFullModelMessageToolbar") private var toolbarExpansionPreference: Bool = false
     @State private var isToolbarExpanded: Bool = false
+    @State private var showInfoPopOver: Bool = false
     
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
@@ -27,12 +28,12 @@ struct MessageModel: View {
             }
             HStack(spacing: 8) {
                 Button {
-                    #if os(macOS)
+#if os(macOS)
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(message.text, forType: .string)
-                    #else
+#else
                     UIPasteboard.general.string = message.text
-                    #endif
+#endif
                 } label: {
                     Label("Copy", systemImage: "doc.on.doc")
                         .contentShape(Rectangle())
@@ -51,28 +52,62 @@ struct MessageModel: View {
                 .buttonStyle(.plain)
                 .labelStyle(.iconOnly)
                 
-                if (isToolbarExpanded){
-                    Divider()
-                        .frame(height:12)
-                    Text(formatMessageTimestamp(message.timeStamp))
-                    Divider()
-                        .frame(height:12)
-                    Text(message.modelUsed)
-                }
-                
-                Button {
-                    withAnimation(.bouncy(duration: 0.3, extraBounce: 0.05)) {
-                        isToolbarExpanded.toggle()
+                if horizontalSizeClass == .compact{
+                    Button {
+                        showInfoPopOver.toggle()
+                    } label: {
+                        Label("Show message info", systemImage: "info.circle")
+                            .contentShape(Rectangle())
+                            .scaleEffect(0.8)
+                            .rotationEffect(showInfoPopOver ? Angle(degrees: 0) : Angle(degrees: -360))
                     }
-                } label: {
-                    Label("Expand/Collapse toolbar", systemImage: "chevron.forward")
-                        .contentShape(Rectangle())
-                        .scaleEffect(0.8)
-                        .rotationEffect(isToolbarExpanded ? Angle(degrees: -180) : Angle(degrees: 0))
+                    .popover(isPresented: $showInfoPopOver) {
+                        let modelUsed = ModelList.getModelFromSlug(slug: message.modelUsed)
+                        VStack(alignment: .leading) {
+                            Text(formatMessageTimestamp(message.timeStamp))
+                            Text(message.timeStamp.formatted())
+                                .font(.caption)
+                                .opacity(0.7)
+                            Divider()
+                            Text(modelUsed.name)
+                            if modelUsed.name != modelUsed.modelID{
+                                Text(modelUsed.modelID)
+                                    .font(.caption)
+                                    .opacity(0.7)
+                            }
+                        }
+                        .padding()
+                        .presentationCompactAdaptation(.popover)
+                    }
+                    .buttonStyle(.plain)
+                    .labelStyle(.iconOnly)
                 }
-                .buttonStyle(.plain)
-                .labelStyle(.iconOnly)
-                
+                else{
+                    if (isToolbarExpanded){
+                        Divider()
+                            .frame(height:12)
+                        Text(formatMessageTimestamp(message.timeStamp))
+                            .help(message.timeStamp.formatted())
+                        Divider()
+                            .frame(height:12)
+                        Text(ModelList.getModelFromSlug(slug: message.modelUsed).name)
+                            .help(message.modelUsed)
+                    }
+                    
+                    Button {
+                        withAnimation(.bouncy(duration: 0.3, extraBounce: 0.05)) {
+                            isToolbarExpanded.toggle()
+                        }
+                    } label: {
+                        Label("Expand/Collapse toolbar", systemImage: "chevron.forward")
+                            .contentShape(Rectangle())
+                            .scaleEffect(0.8)
+                            .rotationEffect(isToolbarExpanded ? Angle(degrees: -180) : Angle(degrees: 0))
+                    }
+                    .buttonStyle(.plain)
+                    .labelStyle(.iconOnly)
+                    
+                }
                 Spacer()
             }
             .padding(.leading, 15)
