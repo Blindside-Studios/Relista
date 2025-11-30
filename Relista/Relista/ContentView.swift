@@ -17,10 +17,10 @@ struct ContentView: View {
     @State var chatCache = ChatCache.shared
     @State var selectedConversationID: UUID? = ConversationManager.createNewConversation(fromID: nil).newChatUUID
     @State var inputMessage = "" // put this here so switching between layouts doesn't clear it
-    
+
     @State var selectedAgent: UUID? = nil
     @State var selectedModel: String = ModelList.placeHolderModel
-    
+
     @State private var columnVisibility: NavigationSplitViewVisibility = {
 #if os(iOS)
         return .detailOnly

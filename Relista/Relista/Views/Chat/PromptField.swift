@@ -14,6 +14,7 @@ struct PromptField: View {
     @Binding var inputMessage: String
     @Binding var selectedAgent: UUID?
     @Binding var selectedModel: String
+    @FocusState private var isTextFieldFocused: Bool
     @AppStorage("APIKeyOpenRouter") private var apiKey: String = ""
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @State private var chatCache = ChatCache.shared
@@ -21,7 +22,7 @@ struct PromptField: View {
     @State private var placeHolderVerb = ChatPlaceHolders.returnRandomVerb()
 
     @Namespace private var MessageOptionsTransition
-    
+
     @AppStorage("HapticFeedbackForMessageGeneration") private var vibrateOnTokensReceived: Bool = true
 
     var body: some View {
@@ -29,6 +30,7 @@ struct PromptField: View {
             TextField(selectedAgent == nil ? placeHolder : "\(placeHolderVerb) @\(AgentManager.getUIAgentName(fromUUID: selectedAgent!))", text: $inputMessage, axis: .vertical)
                 .lineLimit(1...10)
                 .textFieldStyle(.plain)
+                .focused($isTextFieldFocused)
                 .onSubmit(sendMessage)
                 .onKeyPress { keyPress in
                     if keyPress.modifiers == .shift
@@ -131,7 +133,10 @@ struct PromptField: View {
         placeHolder = ChatPlaceHolders.returnRandomString()
         placeHolderVerb = ChatPlaceHolders.returnRandomVerb()
         if (inputMessage != ""){
+            // Dismiss software keyboard while keeping hardware keyboard functional
             #if os(iOS)
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+
             if vibrateOnTokensReceived {
                 let feedbackGenerator = UINotificationFeedbackGenerator()
                 feedbackGenerator.notificationOccurred(.success)
@@ -142,7 +147,7 @@ struct PromptField: View {
             DispatchQueue.main.async {
                 // force render refresh to prevent a bug where the placeholder text isn't showing up and the blinking cursor disappears
             }
-            
+
             // Use ChatCache to send message and handle generation
             chatCache.sendMessage(
                 modelName: selectedModel,
@@ -159,7 +164,10 @@ struct PromptField: View {
         placeHolder = ChatPlaceHolders.returnRandomString()
         placeHolderVerb = ChatPlaceHolders.returnRandomVerb()
         if (inputMessage != ""){
+            // Dismiss software keyboard while keeping hardware keyboard functional
             #if os(iOS)
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+
             if vibrateOnTokensReceived {
                 let feedbackGenerator = UINotificationFeedbackGenerator()
                 feedbackGenerator.notificationOccurred(.warning)
@@ -169,7 +177,7 @@ struct PromptField: View {
             inputMessage = ""
             DispatchQueue.main.async {
             }
-            
+
             chatCache.sendMessageAsSystem(inputText: input, to: conversationID)
         }
     }

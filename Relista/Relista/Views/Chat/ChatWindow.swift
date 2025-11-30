@@ -15,7 +15,7 @@ struct ChatWindow: View {
     @State private var chatCache = ChatCache.shared
 
     @State private var scrollWithAnimation = true
-    
+
     var body: some View {
         ZStack{
             GeometryReader { geo in
@@ -48,6 +48,12 @@ struct ChatWindow: View {
                         .frame(maxWidth: .infinity)
                     }
                     .scrollDismissesKeyboard(.interactively)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        #if os(iOS)
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                        #endif
+                    }
                     .safeAreaBar(edge: .bottom, spacing: 0){
                         PromptField(conversationID: conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel)
                     }
