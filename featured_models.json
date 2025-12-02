@@ -196,8 +196,8 @@
     "isFree": false
   },
   {
-    "name": "Mistral Large",
-    "modelID": "mistralai/mistral-large-2411",
+    "name": "Mistral Large 3",
+    "modelID": "mistralai/mistral-large-2512",
     "provider": "Mistral",
     "family": "Mistral",
     "specifier": "Large",
