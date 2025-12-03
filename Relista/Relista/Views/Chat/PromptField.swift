@@ -26,7 +26,12 @@ struct PromptField: View {
     @AppStorage("HapticFeedbackForMessageGeneration") private var vibrateOnTokensReceived: Bool = true
 
     var body: some View {
-        VStack(spacing: 12) {
+        #if os(macOS)
+        let spacing: CGFloat = 12
+        #else
+        let spacing: CGFloat = 16
+        #endif
+        VStack(spacing: spacing) {
             TextField(selectedAgent == nil ? placeHolder : "\(placeHolderVerb) @\(AgentManager.getUIAgentName(fromUUID: selectedAgent!))", text: $inputMessage, axis: .vertical)
                 .lineLimit(1...10)
                 .textFieldStyle(.plain)
@@ -43,7 +48,7 @@ struct PromptField: View {
                     }
                 }
             
-            HStack(spacing: 12) {
+            HStack(spacing: spacing) {
                 Group{
                     Button("Simulate message flow", systemImage: "ant") {
                         appendDummyMessages()
@@ -101,17 +106,29 @@ struct PromptField: View {
                     let chat = chatCache.getChat(for: conversationID)
                     ZStack{
                         Label("Stop generating", systemImage: "stop.fill")
-                            .offset(y: chat.isGenerating ? 0 : 20)
+                            .offset(y: chat.isGenerating ? 0 : 25)
                         Label("Send message", systemImage: "arrow.up")
-                            .offset(y: chat.isGenerating ? -20 : 0)
+                            .offset(y: chat.isGenerating ? -25 : 0)
                     }
+                    .font(.headline)
+                    // weirdly these seem to be interpreted differently across platforms
+                    #if os(macOS)
+                    .frame(width: 18, height: 18)
+                    #else
+                    .frame(width: 19, height: 19)
+                    #endif
                     .animation(.bouncy(duration: 0.3, extraBounce: 0.15), value: chat.isGenerating)
-                    .clipped()
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
                 .labelStyle(.iconOnly)
                 .buttonBorderShape(.circle)
-                .clipShape(Circle())
+                .clipped()
+                // weirdly these seem to be interpreted differently across platforms
+                #if os(macOS)
+                .offset(x: 7, y: 2)
+                #else
+                .offset(x: 15, y: 1)
+                #endif
                 .contextMenu {
                     Button {
                         sendMessageAsSystem()
@@ -120,9 +137,14 @@ struct PromptField: View {
                     }
                 }
             }
+            .frame(maxHeight: 16)
         }
-        .padding()
+        .padding(spacing)
+        #if os(macOS)
         .glassEffect(in: .rect(cornerRadius: 18))
+        #else
+        .glassEffect(in: .rect(cornerRadius: 22))
+        #endif
         // to center-align
         .frame(maxWidth: .infinity)
         .frame(maxWidth: 750)
