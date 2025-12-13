@@ -45,10 +45,11 @@ struct SendMessageButton: View {
         .clipped()
         // weirdly these seem to be interpreted differently across platforms
         #if os(macOS)
-        .offset(x: 7, y: 2)
+        .offset(x: 0, y: 2)
         #else
-        .offset(x: 15, y: 1)
+        .offset(x: 8, y: 1)
         #endif
+        .padding(.horizontal, -7)
         .contextMenu {
             Button {
                 sendMessageAsSystem()

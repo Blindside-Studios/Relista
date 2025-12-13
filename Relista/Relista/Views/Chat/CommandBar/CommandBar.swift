@@ -14,6 +14,8 @@ struct CommandBar: View {
     @State var chatCache = ChatCache.shared
     @Binding var conversationID: UUID
     
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    
     let sendMessage: () -> Void
     let sendMessageAsSystem: () -> Void
     let appendDummyMessages: () -> Void
@@ -37,11 +39,17 @@ struct CommandBar: View {
                 
                 ReasoningButton(useReasoning: $useReasoning)
                 
+                if horizontalSizeClass == .compact{
+                    Spacer()
+                }
+                
                 ModelPicker(selectedModel: $selectedModel)
+                
+                if horizontalSizeClass != .compact{
+                    Spacer()
+                }
             }
             .opacity(0.75)
-            
-            Spacer()
             
             SendMessageButton(conversationID: $conversationID, sendMessage: sendMessage, sendMessageAsSystem: sendMessageAsSystem)
         }
