@@ -38,9 +38,11 @@ struct SearchButton: View {
                     #endif
             }
             .background {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color.blue.opacity(useSearch ? 0.15 : 0.0001))
-                    .padding(useSearch ? -3 : 4)
+                GeometryReader { backgroundFrame in
+                    RoundedRectangle(cornerRadius: backgroundFrame.size.height + 2, style: .continuous) // +2 to account for padding
+                        .fill(Color.blue.opacity(useSearch ? 0.15 : 0.0001))
+                        .padding(useSearch ? -3 : 4)
+                }
             }
             // the following two lines to eliminate the gap to the right because the system thinks a label text is being displayed
             .padding(.horizontal, !useSearch ? -4 : 0)

@@ -33,14 +33,17 @@ struct ReasoningButton: View {
             } icon: {
                 Image(systemName: useReasoning ? "lightbulb.fill" : "lightbulb")
                     .foregroundStyle(useReasoning ? .blue : .primary)
+                    .font(.system(size: 15, weight: .medium))
                     #if os(macOS)
                     .offset(y: useReasoning ? -0.5 : 0)
                     #endif
             }
             .background {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color.blue.opacity(useReasoning ? 0.15 : 0.0001))
-                    .padding(useReasoning ? -3 : 4)
+                GeometryReader { backgroundFrame in
+                    RoundedRectangle(cornerRadius: backgroundFrame.size.height + 2, style: .continuous) // +2 to account for padding
+                        .fill(Color.blue.opacity(useReasoning ? 0.15 : 0.0001))
+                        .padding(useReasoning ? -3 : 4)
+                }
             }
             // the following two lines to eliminate the gap to the right because the system thinks a label text is being displayed
             .padding(.horizontal, !useReasoning ? -4 : 0)
