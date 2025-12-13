@@ -53,8 +53,10 @@ struct PromptField: View {
                         return .ignored
                     }
                 }
+                //.padding(spacing)
             CommandBar(useSearch: $useSearch, useReasoning: $useReasoning, selectedModel: $selectedModel, conversationID: $conversationID, sendMessage: sendMessage, sendMessageAsSystem: sendMessageAsSystem, appendDummyMessages: appendDummyMessages)
         }
+        .padding(spacing)
         #if os(macOS)
         .glassEffect(in: .rect(cornerRadius: 18))
         #else

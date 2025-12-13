@@ -9,23 +9,12 @@ import SwiftUI
 
 struct PersonalizationSettings: View {
     @AppStorage("AppDefaultModel") private var defaultModel: String = "mistralai/mistral-medium-3.1"
-    @State private var showModelPickerPopOver = false
     @AppStorage("DefaultAssistantInstructions") private var sysInstructions: String = ""
     
     var body: some View {
         Form{
             Section("Default Model"){
-                Text(defaultModel)
-                    .popover(isPresented: $showModelPickerPopOver) {
-                        ModelPicker(
-                            selectedModelSlug: $defaultModel,
-                            isOpen: $showModelPickerPopOver
-                        )
-                        .frame(minWidth: 250, maxHeight: 450)
-                        .presentationCompactAdaptation(.popover)
-                    }
-                    .contentShape(Rectangle())
-                    .onTapGesture{ showModelPickerPopOver.toggle() }
+                ModelPicker(selectedModel: $defaultModel)
             }
             
             Section("Default instructions"){

@@ -62,7 +62,7 @@ struct ModelPicker: View {
             .presentationDetents([.medium, .large])
             
             .navigationTransition(
-                .zoom(sourceID: "model", in: MessageOptionsTransition)
+                .zoom(sourceID: "model", in: ModelPickerTransition)
             )
         }
         #endif

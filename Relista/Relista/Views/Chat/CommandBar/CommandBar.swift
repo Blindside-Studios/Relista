@@ -35,6 +35,8 @@ struct CommandBar: View {
                 
                 SearchButton(useSearch: $useSearch)
                 
+                ReasoningButton(useReasoning: $useReasoning)
+                
                 ModelPicker(selectedModel: $selectedModel)
             }
             .opacity(0.75)
@@ -44,8 +46,8 @@ struct CommandBar: View {
             SendMessageButton(conversationID: $conversationID, sendMessage: sendMessage, sendMessageAsSystem: sendMessageAsSystem)
         }
         .animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: useSearch)
+        .animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: useReasoning)
         .frame(maxHeight: 16)
-        .padding(spacing)
     }
 }
 
