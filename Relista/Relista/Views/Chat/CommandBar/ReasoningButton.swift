@@ -33,9 +33,8 @@ struct ReasoningButton: View {
             } icon: {
                 Image(systemName: useReasoning ? "lightbulb.fill" : "lightbulb")
                     .foregroundStyle(useReasoning ? .blue : .primary)
+                    #if os(iOS)
                     .font(.system(size: 15, weight: .medium))
-                    #if os(macOS)
-                    .offset(y: useReasoning ? -0.5 : 0)
                     #endif
             }
             .background {

@@ -34,7 +34,7 @@ struct SearchButton: View {
                 Image(systemName: useSearch ? "globe.fill" : "globe")
                     .foregroundStyle(useSearch ? .blue : .primary)
                     #if os(macOS)
-                    .offset(y: useSearch ? -0.5 : 0)
+                    .font(.system(size: 15, weight: .semibold))
                     #endif
             }
             .background {
