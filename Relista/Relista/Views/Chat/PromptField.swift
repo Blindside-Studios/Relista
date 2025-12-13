@@ -22,6 +22,8 @@ struct PromptField: View {
     @State private var placeHolderVerb = ChatPlaceHolders.returnRandomVerb()
     
     @State var useSearch = false
+    
+    @State private var isTryingToAddNewLine = false // workaround for .handled because iPadOS 26 is garbage
 
     @Namespace private var MessageOptionsTransition
 
@@ -43,6 +45,9 @@ struct PromptField: View {
                     if keyPress.modifiers == .shift
                         && keyPress.key == .return
                     {
+                        #if os(iOS)
+                        isTryingToAddNewLine = true
+                        #endif
                         inputMessage += "\n"
                         return .handled
                     } else {
@@ -175,7 +180,7 @@ struct PromptField: View {
     
     func sendMessage(){
         let chat = chatCache.getChat(for: conversationID)
-        if !chat.isGenerating{
+        if !chat.isGenerating && !isTryingToAddNewLine {
             placeHolder = ChatPlaceHolders.returnRandomString()
             placeHolderVerb = ChatPlaceHolders.returnRandomVerb()
             if (inputMessage != ""){
@@ -205,6 +210,14 @@ struct PromptField: View {
                     useSearch: useSearch
                 )
             }
+        }
+        else{
+            #if os(iOS)
+            DispatchQueue.main.async {
+                isTextFieldFocused = true
+                isTryingToAddNewLine = false
+            }
+            #endif
         }
     }
     
