@@ -15,15 +15,16 @@ struct ModelPicker: View {
     @State private var showModelPickerSheet = false
     @Binding var selectedModel: String
     
+    @State private var internalModelRepresentation = ModelList.getModelFromSlug(slug: ModelList.placeHolderModel)
+    
     var body: some View {
         Button{
             if horizontalSizeClass == .compact { showModelPickerSheet = true }
             else { showModelPickerPopOver.toggle() }
         } label: {
-            let model = ModelList.getModelFromSlug(slug: selectedModel)
             VStack(alignment: .center, spacing: -2) {
-                if let family = model.family,
-                   let spec = model.specifier {
+                if let family = internalModelRepresentation.family,
+                   let spec = internalModelRepresentation.specifier {
                     
                     Text(family)
                         .font(.caption2)
@@ -32,11 +33,14 @@ struct ModelPicker: View {
                     Text(spec)
                         .font(.caption)
                 } else {
-                    Text(model.name)
+                    Text(internalModelRepresentation.name)
                         .font(.caption)
                 }
             }
             .bold()
+            .onAppear(perform: refreshModelDisplay)
+            .onChange(of: ModelList.areModelsLoaded, refreshModelDisplay)
+            .onChange(of: selectedModel, refreshModelDisplay)
         }
         .buttonStyle(.plain)
         .labelStyle(.titleOnly)
@@ -66,6 +70,10 @@ struct ModelPicker: View {
             )
         }
         #endif
+    }
+    
+    private func refreshModelDisplay(){
+        internalModelRepresentation = ModelList.getModelFromSlug(slug: selectedModel)
     }
 }
 

@@ -56,23 +56,30 @@ struct RemoteAIModel: Codable {
 class ModelList{
     @AppStorage("AppDefaultModel") static var placeHolderModel: String = "mistralai/mistral-medium-3.1"
     static var AllModels: [AIModel] = []
+    static var areModelsLoaded = false
     
     @MainActor
     static func loadModels() async {
         if await updateFromRemote() {
             if let models = loadFromCache() {
                 AllModels = models.compactMap { $0.toLocal() }
+                areModelsLoaded = true
+                debugPrint("Models are loaded")
                 return
             }
         }
 
         if let models = loadFromCache() {
             AllModels = models.compactMap { $0.toLocal() }
+            areModelsLoaded = true
+            debugPrint("Models are loaded")
             return
         }
 
         AllModels = loadBundledDefaults()
         // ChatCache.shared.selectedModel = Models.first ?? getModelFromSlug(slug: placeHolderModel)
+        areModelsLoaded = true
+        debugPrint("Models are loaded")
     }
     
     private static let remoteModelURL = URL(string: "https://raw.githubusercontent.com/Blindside-Studios/Relista/refs/heads/main/featured_models.json")!
