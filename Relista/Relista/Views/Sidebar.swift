@@ -143,7 +143,9 @@ struct Sidebar: View {
                         if (conv.agentUsed != nil){
                             let agent = AgentManager.getAgent(fromUUID: conv.agentUsed!)
                             if agent != nil { selectedAgent = agent!.id }
+                            else {selectedAgent = nil}
                         }
+                        else { selectedAgent = nil }
                         selectedModel = conv.modelUsed
                         onSidebarSelection?()
                     }

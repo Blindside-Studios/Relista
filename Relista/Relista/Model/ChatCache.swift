@@ -282,6 +282,8 @@ class ChatCache {
         chat.messages.append(userMsg)
         conversation.lastInteracted = Date.now
         conversation.lastModified = Date.now
+        conversation.agentUsed = agent
+        conversation.modelUsed = modelName
 
         // Save user message immediately
         saveMessages(for: conversationID)
