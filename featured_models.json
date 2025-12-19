@@ -128,14 +128,6 @@
     "isFree": false
   },
   {
-    "name": "GPT 4.1",
-    "modelID": "openai/gpt-4.1",
-    "provider": "OpenAI",
-    "family": "GPT",
-    "specifier": "4.1",
-    "isFree": false
-  },
-  {
     "name": "GPT 4o",
     "modelID": "openai/gpt-4o",
     "provider": "OpenAI",
@@ -176,29 +168,20 @@
     "specifier": "Opus 4.5",
     "isFree": false
   },
-
+  {
+    "name": "Gemini 3 Flash",
+    "modelID": "google/gemini-3-flash-preview",
+    "provider": "Google",
+    "family": "Gemini 3",
+    "specifier": "Flash",
+    "isFree": false
+  },
   {
     "name": "Gemini 3 Pro Preview",
     "modelID": "google/gemini-3-pro-preview",
     "provider": "Google",
-    "family": "Gemini",
-    "specifier": "3 Pro Preview",
-    "isFree": false
-  },
-  {
-    "name": "Gemini 2.5 Flash",
-    "modelID": "google/gemini-2.5-flash",
-    "provider": "Google",
-    "family": "Gemini",
-    "specifier": "2.5 Flash",
-    "isFree": false
-  },
-  {
-    "name": "Gemini 2.5 Pro",
-    "modelID": "google/gemini-2.5-pro",
-    "provider": "Google",
-    "family": "Gemini",
-    "specifier": "2.5 Pro",
+    "family": "Gemini 3",
+    "specifier": "Pro",
     "isFree": false
   },
   {
