@@ -15,7 +15,7 @@ struct PromptField: View {
     @Binding var selectedAgent: UUID?
     @Binding var selectedModel: String
     @FocusState private var isTextFieldFocused: Bool
-    @AppStorage("APIKeyOpenRouter") private var apiKey: String = ""
+    @AppStorage("APIKeyMistral") private var apiKey: String = ""
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @State private var chatCache = ChatCache.shared
     @State private var placeHolder = ChatPlaceHolders.returnRandomString()

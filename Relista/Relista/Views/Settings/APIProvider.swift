@@ -8,16 +8,16 @@
 import SwiftUI
 
 struct APIProvider: View {
-    //@AppStorage("APIKeyMistral") private var apiKeyMistral: String = ""
+    @AppStorage("APIKeyMistral") private var apiKeyMistral: String = ""
     @AppStorage("APIKeyOpenRouter") private var apiKeyOpenRouter: String = ""
     
     var body: some View {
         Form {
             Section("API Keys") {
+                SecureField("Mistral API Key", text: $apiKeyMistral)
+                    .textFieldStyle(.roundedBorder)
                 SecureField("OpenRouter API Key", text: $apiKeyOpenRouter)
                     .textFieldStyle(.roundedBorder)
-                //SecureField("Mistral API Key", text: $apiKeyMistral)
-                //    .textFieldStyle(.roundedBorder)
             }
             .padding()
         }

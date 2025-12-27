@@ -5,10 +5,10 @@
 //  Created by Nicolas Helbig on 22.11.25.
 //
 
+/*
 import Foundation
 import SwiftUI
 
-/// Represents a chunk from the streaming API response
 enum StreamChunk {
     case content(String)
     case annotations([MessageAnnotation])
@@ -79,16 +79,6 @@ struct OpenRouter {
         
         let apiMessages = [systemMessage] + messages.map {
             ["role": $0.role.toAPIString(), "content": $0.text]
-        }
-
-        // Debug: Log message count and approximate token count
-        let totalChars = apiMessages.reduce(0) { $0 + (($1["content"] as? String)?.count ?? 0) }
-        let estimatedTokens = totalChars / 4 // Rough estimate: 1 token ≈ 4 characters
-        print("📊 Sending \(apiMessages.count) messages (~\(estimatedTokens) tokens estimated)")
-        if estimatedTokens > 100000 {
-            print("⚠️ WARNING: Estimated token count is very high!")
-            print("   System message length: \((systemMessage["content"] as? String)?.count ?? 0) chars")
-            print("   Total messages: \(messages.count)")
         }
 
         var model = modelName
@@ -163,3 +153,4 @@ struct OpenRouter {
         return try decoder.decode([MessageAnnotation].self, from: jsonData)
     }
 }
+*/
