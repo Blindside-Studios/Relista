@@ -72,8 +72,13 @@ struct Mistral {
                 .flatMap { AgentManager.getAgent(fromUUID: $0)?.systemPrompt } ?? ""
         ]
 
-        let apiMessages = [systemMessage] + messages.map {
-            ["role": $0.role.toAPIString(), "content": $0.text]
+        let apiMessages = [systemMessage] + messages.map { message in
+            var content = message.text
+            // replace blank messages with placeholder (Mistral requires non-empty content)
+            if content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                content = "[No message content]"
+            }
+            return ["role": message.role.toAPIString(), "content": content]
         }
 
         // Note: Mistral API supports web searches but it's not yet implemented, like reasoning
@@ -83,6 +88,8 @@ struct Mistral {
         }
 
         print("🔍 Model being used: \(modelName)")
+        print("📨 Request URL: \(request.url?.absoluteString ?? "nil")")
+        print("📨 Request headers: \(request.allHTTPHeaderFields ?? [:])")
 
         let body: [String: Any] = [
             "model": modelName,
@@ -92,21 +99,44 @@ struct Mistral {
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (bytes, _) = try await URLSession.shared.bytes(for: request)
+        let (bytes, response) = try await URLSession.shared.bytes(for: request)
 
         return AsyncThrowingStream { continuation in
             Task {
                 do {
                     for try await line in bytes.lines {
+                        // Log every line received for debugging
+                        if !line.isEmpty {
+                            print("📥 Received line: \(line)")
+                        }
+
                         // check for error responses (they don't have "data: " prefix)
                         if line.hasPrefix("{") && line.contains("\"error\"") {
+                            print("❌ ERROR RESPONSE DETECTED")
+                            print("❌ Full error line: \(line)")
+
                             if let jsonData = line.data(using: .utf8),
-                               let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
-                               let errorDict = json["error"] as? [String: Any],
-                               let errorMessage = errorDict["message"] as? String {
-                                let error = NSError(domain: "Mistral", code: 1, userInfo: [NSLocalizedDescriptionKey: errorMessage])
-                                continuation.finish(throwing: error)
-                                return
+                               let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
+                                print("❌ Parsed error JSON: \(json)")
+
+                                if let errorDict = json["error"] as? [String: Any] {
+                                    print("❌ Error dict: \(errorDict)")
+                                    let errorMessage = errorDict["message"] as? String ?? "Unknown error"
+                                    let errorType = errorDict["type"] as? String ?? "unknown"
+                                    let errorCode = errorDict["code"] as? String ?? "unknown"
+
+                                    print("❌ Error message: \(errorMessage)")
+                                    print("❌ Error type: \(errorType)")
+                                    print("❌ Error code: \(errorCode)")
+
+                                    let error = NSError(domain: "Mistral", code: 1, userInfo: [
+                                        NSLocalizedDescriptionKey: errorMessage,
+                                        "type": errorType,
+                                        "code": errorCode
+                                    ])
+                                    continuation.finish(throwing: error)
+                                    return
+                                }
                             }
                         }
 
