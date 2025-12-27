@@ -23,11 +23,9 @@ struct AIModel: Identifiable, Hashable {
     let name: String
     let modelID: String
     let provider: ModelProvider
-    
+
     let family: String?
     let specifier: String?
-    
-    let isFree: Bool
 }
 
 struct RemoteAIModel: Codable {
@@ -36,19 +34,17 @@ struct RemoteAIModel: Codable {
     let provider: String
     let family: String?
     let specifier: String?
-    let isFree: Bool
-    
+
     func toLocal() -> AIModel? {
         let providerEnum = ModelProvider(rawValue: provider) ?? .uncategorized
-        
+
         return AIModel(
             id: UUID(),
             name: name,
             modelID: modelID,
             provider: providerEnum,
             family: family,
-            specifier: specifier,
-            isFree: isFree
+            specifier: specifier
         )
     }
 }
@@ -142,8 +138,7 @@ class ModelList{
                 modelID: slug,
                 provider: .uncategorized,
                 family: parsedSlug.family,
-                specifier: parsedSlug.specifier,
-                isFree: false
+                specifier: parsedSlug.specifier
             )
         }
     }

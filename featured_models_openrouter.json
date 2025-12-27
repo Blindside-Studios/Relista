@@ -1,0 +1,247 @@
+[
+    {
+    "name": "Mistral Medium 3.1",
+    "modelID": "mistralai/mistral-medium-3.1",
+    "provider": "Mistral",
+    "family": "Mistral",
+    "specifier": "Medium 3.1",
+    "isFree": false,
+    "directAPISlug": "mistral-medium-latest"
+  },
+  {
+    "name": "Mistral Small Creative",
+    "modelID": "mistralai/mistral-small-creative",
+    "provider": "Mistral",
+    "family": "Mistral",
+    "specifier": "Small Creative",
+    "isFree": false,
+    "directAPISlug": "labs-mistral-small-creative"
+  },
+  {
+    "name": "Mistral Small 3.2 24B",
+    "modelID": "mistralai/mistral-small-3.2-24b-instruct",
+    "provider": "Mistral",
+    "family": "Mistral",
+    "specifier": "Small 3.2",
+    "isFree": true,
+    "directAPISlug": "mistral-small-latest"
+  },
+  {
+    "name": "Magistral Small",
+    "modelID": "mistralai/magistral-small-2506",
+    "provider": "Mistral",
+    "family": "Magistral",
+    "specifier": "Small",
+    "isFree": false,
+    "directAPISlug": "magistral-small-latest"
+  },
+  {
+    "name": "Magistral Medium",
+    "modelID": "mistralai/magistral-medium-2506",
+    "provider": "Mistral",
+    "family": "Magistral",
+    "specifier": "Medium",
+    "isFree": false,
+    "directAPISlug": "magistral-medium-latest"
+  },
+  {
+    "name": "Mistral Small 3",
+    "modelID": "mistralai/mistral-small-24b-instruct-2501",
+    "provider": "Mistral",
+    "family": "Mistral",
+    "specifier": "Small 3",
+    "isFree": false,
+    "directAPISlug": "mistral-small-latest"
+  },
+  {
+    "name": "Mistral Large 3",
+    "modelID": "mistralai/mistral-large-2512",
+    "provider": "Mistral",
+    "family": "Mistral",
+    "specifier": "Large",
+    "isFree": false,
+    "directAPISlug": "mistral-large-latest"
+  },
+  {
+    "name": "Ministral 3B",
+    "modelID": "mistralai/ministral-3b",
+    "provider": "Mistral",
+    "family": "Ministral",
+    "specifier": "3B",
+    "isFree": false,
+    "directAPISlug": "ministral-3b-latest"
+  },
+  {
+    "name": "Mistral NeMo",
+    "modelID": "mistralai/mistral-nemo",
+    "provider": "Mistral",
+    "family": "Mistral",
+    "specifier": "NeMo",
+    "isFree": true,
+    "directAPISlug": "open-mistral-nemo"
+  },
+  {
+    "name": "Mistral 7B Instruct",
+    "modelID": "mistralai/mistral-7b-instruct",
+    "provider": "Mistral",
+    "family": "Mistral",
+    "specifier": "7B Instruct",
+    "isFree": true,
+    "directAPISlug": "open-mistral-7b"
+  },
+  {
+    "name": "GPT 5.2",
+    "modelID": "openai/gpt-5.2",
+    "provider": "OpenAI",
+    "family": "GPT",
+    "specifier": "5.2",
+    "isFree": false,
+    "directAPISlug": ""
+  },
+  {
+    "name": "GPT 5.2 Chat",
+    "modelID": "openai/gpt-5.2-chat",
+    "provider": "OpenAI",
+    "family": "GPT",
+    "specifier": "5.2 Chat",
+    "isFree": false,
+    "directAPISlug": ""
+  },
+  {
+    "name": "openai/gpt-oss-120b",
+    "modelID": "openai/gpt-oss-120b",
+    "provider": "OpenAI",
+    "family": "gpt-oss",
+    "specifier": "120B",
+    "isFree": false,
+    "directAPISlug": ""
+  },
+  {
+    "name": "openai/gpt-oss-20b",
+    "modelID": "openai/gpt-oss-20b",
+    "provider": "OpenAI",
+    "family": "gpt-oss",
+    "specifier": "20B",
+    "isFree": true,
+    "directAPISlug": ""
+  },
+  {
+    "name": "o3",
+    "modelID": "openai/o3",
+    "provider": "OpenAI",
+    "family": "o3",
+    "specifier": null,
+    "isFree": false,
+    "directAPISlug": ""
+  },
+  {
+    "name": "o4 Mini",
+    "modelID": "openai/o4-mini",
+    "provider": "OpenAI",
+    "family": "o4",
+    "specifier": "mini",
+    "isFree": false,
+    "directAPISlug": ""
+  },
+  {
+    "name": "GPT 4o",
+    "modelID": "openai/gpt-4o",
+    "provider": "OpenAI",
+    "family": "GPT",
+    "specifier": "4o",
+    "isFree": false,
+    "directAPISlug": ""
+  },
+  {
+    "name": "GPT 4o Mini",
+    "modelID": "openai/gpt-4o-mini",
+    "provider": "OpenAI",
+    "family": "GPT",
+    "specifier": "4o mini",
+    "isFree": false,
+    "directAPISlug": ""
+  },
+
+  {
+    "name": "Claude Haiku 4.5",
+    "modelID": "anthropic/claude-haiku-4.5",
+    "provider": "Anthropic",
+    "family": "Claude",
+    "specifier": "Haiku 4.5",
+    "isFree": false,
+    "directAPISlug": ""
+  },
+  {
+    "name": "Claude Sonnet 4.5",
+    "modelID": "anthropic/claude-sonnet-4.5",
+    "provider": "Anthropic",
+    "family": "Claude",
+    "specifier": "Sonnet 4.5",
+    "isFree": false,
+    "directAPISlug": ""
+  },
+  {
+    "name": "Claude Opus 4.5",
+    "modelID": "anthropic/claude-opus-4.5",
+    "provider": "Anthropic",
+    "family": "Claude",
+    "specifier": "Opus 4.5",
+    "isFree": false,
+    "directAPISlug": ""
+  },
+  {
+    "name": "Gemini 3 Flash",
+    "modelID": "google/gemini-3-flash-preview",
+    "provider": "Google",
+    "family": "Gemini 3",
+    "specifier": "Flash",
+    "isFree": false,
+    "directAPISlug": ""
+  },
+  {
+    "name": "Gemini 3 Pro Preview",
+    "modelID": "google/gemini-3-pro-preview",
+    "provider": "Google",
+    "family": "Gemini 3",
+    "specifier": "Pro",
+    "isFree": false,
+    "directAPISlug": ""
+  },
+  {
+    "name": "Gemma 3 27B",
+    "modelID": "google/gemma-3-27b-it",
+    "provider": "Google",
+    "family": "Gemma",
+    "specifier": "3 27B",
+    "isFree": true,
+    "directAPISlug": ""
+  },
+
+  {
+    "name": "DeepSeek V3.1 Terminus",
+    "modelID": "deepseek/deepseek-v3.1-terminus",
+    "provider": "DeepSeek",
+    "family": "DeepSeek",
+    "specifier": "V3.1 Terminus",
+    "isFree": false,
+    "directAPISlug": ""
+  },
+  {
+    "name": "DeepSeek Chat V3.1",
+    "modelID": "deepseek/deepseek-chat-v3.1",
+    "provider": "DeepSeek",
+    "family": "DeepSeek",
+    "specifier": "Chat V3.1",
+    "isFree": false,
+    "directAPISlug": ""
+  },
+  {
+    "name": "DeepSeek R1 0528",
+    "modelID": "deepseek/deepseek-r1-0528",
+    "provider": "DeepSeek",
+    "family": "DeepSeek",
+    "specifier": "R1",
+    "isFree": true,
+    "directAPISlug": ""
+  }
+]
