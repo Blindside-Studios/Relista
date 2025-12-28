@@ -55,6 +55,12 @@ struct ChatWindow: View {
                     .safeAreaBar(edge: .bottom, spacing: 0){
                         PromptField(conversationID: $conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, useSearch: $useSearch, useReasoning: $useReasoning)
                     }
+                    .onChange(of: conversationID) { _, _ in
+                        // Scroll to bottom immediately when switching conversations
+                        if let lastMessageID = chat.messages.last?.id {
+                            proxy.scrollTo(lastMessageID, anchor: .bottom)
+                        }
+                    }
                     .onChange(of: chat.messages.last?.id) { _, newLastMessageID in
                         guard let lastMessage = chat.messages.last,
                               lastMessage.role == .user || lastMessage.role == .system else {
