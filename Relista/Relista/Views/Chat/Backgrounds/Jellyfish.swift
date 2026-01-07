@@ -38,17 +38,17 @@ struct Jellyfish: View {
                     Rectangle()
                         .overlay {
                             RoundedRectangle(cornerSize: CGSize(width: cornerRadius, height: cornerRadius), style: .continuous)
-                                .blur(radius: isChatBlank ? 20 : 10)
+                                .blur(radius: isChatBlank ? 40 : 30)
                                 .opacity(isChatBlank ? 0.6 : 0.9)
                                 .blendMode(.destinationOut)
                             RoundedRectangle(cornerSize: CGSize(width: cornerRadius, height: cornerRadius), style: .continuous)
                                 .blur(radius: isChatBlank ? 40 : 20)
-                                .opacity(isChatBlank ? 0.9 : 1)
+                                .opacity(isChatBlank ? 0.6 : 0.7)
                                 .blendMode(.destinationOut)
                         }
                         .compositingGroup()
                 }
-                .opacity(isChatBlank ? 1 : 0.4)
+                .opacity(isChatBlank ? 1 : 0.8)
                 .onChange(of: selectedChat, {_ = isChatBlank})
                 .ignoresSafeArea()
             

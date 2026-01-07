@@ -34,61 +34,83 @@ struct InputUI: View {
     @State private var greetingTask: Task<Void, Never>?
     
     var body: some View {
-        if horizontalSizeClass == .compact {
-            PromptField(conversationID: $conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, useSearch: $useSearch, useReasoning: $useReasoning)
-        } else {
-            VStack{
-                if isChatBlank {
-                    Spacer()
-                    
-                    HStack(alignment: .bottom){
-                        Spacer()
-                        Text(agentIcon)
-                        Text(displayedGreeting)
-                            .fixedSize(horizontal: false, vertical: true)
-                            //.animation(.easeOut(duration: 0.075), value: displayedGreeting)
-                        Spacer()
+        Group{
+            if horizontalSizeClass == .compact {
+                VStack (alignment: .center){
+                    VStack{
+                        if isChatBlank{
+                            Spacer()
+                            Text(agentIcon)
+                                .font(.system(size: 72))
+                            Text(displayedGreeting)
+                                .multilineTextAlignment(.center)
+                                .font(.largeTitle)
+                            Spacer()
+                            Spacer()
+                            Spacer()
+                        }
                     }
                     .padding()
-                    .font(Font.largeTitle.bold())
-                    // cap it to something really small, in combination with elements not being clipped and the bottom alignment, this will make the text expand upwards.
-                    .frame(height: 20, alignment: .bottom)
                     .transition(
                         AnyTransition.offset(y: -150).combined(with: .opacity)
                     )
-                }
-                PromptField(conversationID: $conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, useSearch: $useSearch, useReasoning: $useReasoning)
-                if isChatBlank {
-                    // double spacer so the actual content is above center
-                    Spacer()
-                    Spacer()
-                }
-            }
-            .task(id: conversationID){
-                greetingTask?.cancel()
-                if !isChatBlank { return } // don't create a greeting when the user navigates to an actual chat
-                
-                displayedGreeting = ""
-                
-                do {
-                    greetingBannerText = try await Mistral(apiKey: apiKey)
-                        .generateGreetingBanner(agent: selectedAgent)
                     
-                    greetingTask = Task {
-                        await animateGreeting(greetingBannerText)
-                    }
-                } catch {
-                    greetingBannerText = "Hello!"
-                    displayedGreeting = "Hello!"
+                    PromptField(conversationID: $conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, useSearch: $useSearch, useReasoning: $useReasoning)
                 }
+            } else {
+                VStack{
+                    if isChatBlank {
+                        Spacer()
+                        
+                        HStack(alignment: .bottom){
+                            Spacer()
+                            Text(agentIcon)
+                            Text(displayedGreeting)
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Spacer()
+                        }
+                        .padding()
+                        .font(Font.largeTitle.bold())
+                        // cap it to something really small, in combination with elements not being clipped and the bottom alignment, this will make the text expand upwards.
+                        .frame(height: 20, alignment: .bottom)
+                        .transition(
+                            AnyTransition.offset(y: -150).combined(with: .opacity)
+                        )
+                    }
+                    PromptField(conversationID: $conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, useSearch: $useSearch, useReasoning: $useReasoning)
+                    if isChatBlank {
+                        // double spacer so the actual content is above center
+                        Spacer()
+                        Spacer()
+                    }
+                }
+                // center-alignment
+                .frame(maxWidth: .infinity)
+                .frame(maxWidth: 750)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, isChatBlank ? 50 : 0)
             }
-            .animation(.bouncy, value: isChatBlank)
-            // center-alignment
-            .frame(maxWidth: .infinity)
-            .frame(maxWidth: 750)
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, isChatBlank ? 50 : 0)
         }
+        .task(id: conversationID){
+            greetingTask?.cancel()
+            if !isChatBlank { return } // don't create a greeting when the user navigates to an actual chat
+            
+            displayedGreeting = ""
+            
+            do {
+                greetingBannerText = try await Mistral(apiKey: apiKey)
+                    .generateGreetingBanner(agent: selectedAgent)
+                
+                greetingTask = Task {
+                    await animateGreeting(greetingBannerText)
+                }
+            } catch {
+                greetingBannerText = "Hello!"
+                displayedGreeting = "Hello!"
+            }
+        }
+        .animation(.bouncy, value: isChatBlank)
     }
     
     private func animateGreeting(_ fullText: String) async {
