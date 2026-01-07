@@ -41,16 +41,17 @@ struct Sidebar: View {
                     Text("🐙 New chat")
                     Spacer()
                 }
-                .padding(8)
+                .padding(10)
                 .background {
                     if isCurrentEmpty && selectedAgent == nil {
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(.thickMaterial)
-                    } else {
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(.clear)
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .glassEffect(in: .rect(cornerRadius: 16.0))
+                            .transition(.opacity.combined(with: .scale(scale: 0.3)).combined(with: .offset(x: -100)))
                     }
                 }
+                .animation(.default, value: isCurrentEmpty)
+                .animation(.default, value: selectedAgent)
+                //.clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .contentShape(Rectangle())
                 .onTapGesture {
                     selectedConversationID = ConversationManager.createNewConversation(
@@ -68,17 +69,17 @@ struct Sidebar: View {
                             Text(agent.icon + " " + agent.name)
                             Spacer()
                         }
-                        .padding(8)
+                        .padding(10)
                         .background {
                             if isCurrentEmpty && isCurrentAgent {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(.thickMaterial)
-                            } else {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(.clear)
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .glassEffect(in: .rect(cornerRadius: 16.0))
+                                    .transition(.opacity.combined(with: .scale(scale: 0.3)).combined(with: .offset(x: -100)))
                             }
                         }
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .animation(.bouncy, value: isCurrentEmpty)
+                        .animation(.bouncy, value: isCurrentAgent)
+                        //.clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                         .contentShape(Rectangle())
                         .onTapGesture {
                             let result = ConversationManager.createNewConversation(
@@ -104,7 +105,7 @@ struct Sidebar: View {
                         Text("Squidlets")
                         Spacer()
                     }
-                    .padding(8)
+                    .padding(10)
                 }
                 .opacity(0.8)
                 .contentShape(Rectangle())
@@ -127,17 +128,16 @@ struct Sidebar: View {
                         Text(conv.title)
                         Spacer()
                     }
-                    .padding(8)
+                    .padding(10)
                     .background {
                         if selectedConversationID == conv.id {
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(.thickMaterial)
-                        } else {
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(.clear)
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .glassEffect(in: .rect(cornerRadius: 16.0))
+                                .transition(.opacity.combined(with: .scale(scale: 0.3)).combined(with: .offset(x: -100)))
                         }
                     }
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .animation(.bouncy, value: selectedConversationID)
+                    //.clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .contentShape(Rectangle())
                     .onTapGesture {
                         loadConversation(conv.id)
@@ -221,11 +221,11 @@ struct Sidebar: View {
         #if os(iOS)
         .safeAreaBar(edge: .bottom, spacing: 0){
             HStack{
+                Spacer()
                 Button {
                     showingSettings.toggle()
                 } label: {
                     Label("Settings", systemImage: "gear")
-                        .padding(.horizontal)
                         .contentShape(Rectangle())
                 }
                 .sheet(isPresented: $showingSettings) {
@@ -241,6 +241,9 @@ struct Sidebar: View {
                             .navigationTitle("Settings")
                     }
                 }
+                .buttonStyle(.plain)
+                .padding()
+                .glassEffect()
                 Spacer()
             }
         }
