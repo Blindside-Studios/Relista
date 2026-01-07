@@ -27,6 +27,7 @@ struct Sidebar: View {
     @ObservedObject private var syncManager = CloudKitSyncManager.shared
 
     @AppStorage("CustomAgentsInSidebarAreExpanded") private var showCustomAgents: Bool = true
+    @AppStorage("ChatsInSidebarAreExpanded") private var showChats = true
 
     @Environment(\.onSidebarSelection) private var onSidebarSelection
     @Environment(\.horizontalSizeClass) private var hSizeClass
@@ -49,8 +50,8 @@ struct Sidebar: View {
                             .glassEffect(in: .rect(cornerRadius: 16.0))
                             .transition(
                                 hSizeClass == .compact
-                                    ? .opacity
-                                    : .opacity.combined(with: .scale(scale: 0.3)).combined(with: .offset(x: -100))
+                                ? .opacity
+                                : .opacity.combined(with: .scale(scale: 0.3)).combined(with: .offset(x: -100))
                             )
                     }
                 }
@@ -81,8 +82,8 @@ struct Sidebar: View {
                                     .glassEffect(in: .rect(cornerRadius: 16.0))
                                     .transition(
                                         hSizeClass == .compact
-                                            ? .opacity
-                                            : .opacity.combined(with: .scale(scale: 0.3)).combined(with: .offset(x: -100))
+                                        ? .opacity
+                                        : .opacity.combined(with: .scale(scale: 0.3)).combined(with: .offset(x: -100))
                                     )
                             }
                         }
@@ -122,75 +123,20 @@ struct Sidebar: View {
                 .labelStyle(.iconOnly)
                 .backgroundStyle(.clear)
                 
-                Divider()
-                    .padding(8)
-                
-                ForEach(
-                    chatCache.conversations
-                        .filter { $0.hasMessages && !$0.isArchived }
-                        .sorted { a, b in
-                            a.lastInteracted > b.lastInteracted
-                        },
-                    id: \.id
-                ) { conv in
-                    HStack {
-                        Text(conv.title)
-                        Spacer()
+                HStack(alignment: .center){
+                    Text("Recents")
+                        .font(.caption)
+                        .opacity(0.5)
+                    VStack{
+                        Divider()
+                            .padding(4)
                     }
-                    .padding(10)
-                    .background {
-                        if selectedConversationID == conv.id {
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .glassEffect(in: .rect(cornerRadius: 16.0))
-                                .transition(
-                                    hSizeClass == .compact
-                                        ? .opacity
-                                        : .opacity.combined(with: .scale(scale: 0.3)).combined(with: .offset(x: -100))
-                                )
-                        }
-                    }
-                    .animation(.default, value: selectedConversationID)
-                    //.clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        loadConversation(conv.id)
-                        if (conv.agentUsed != nil){
-                            let agent = AgentManager.getAgent(fromUUID: conv.agentUsed!)
-                            if agent != nil { selectedAgent = agent!.id }
-                            else {selectedAgent = nil}
-                        }
-                        else { selectedAgent = nil }
-                        selectedModel = conv.modelUsed
-                        onSidebarSelection?()
-                    }
-                    .contextMenu {
-                        Button {
-                            conversationToRename = conv
-                            renameText = conv.title
-                            showingRenameDialog = true
-                        } label: {
-                            Label("Rename", systemImage: "pencil")
-                        }
-                        
-                        Button(role: .destructive) {
-                            conversationToDelete = conv
-                            showingDeleteConfirmation = true
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                    }
-                }
-            }
-            .animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: showCustomAgents)
-            //.animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: chatCache.conversations)
-            //.animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: agentManager.customAgents)
-            .navigationTitle("Chats")
-            #if os(macOS)
-            .toolbar {
-                ToolbarItem(placement: .automatic) {
                     if syncManager.isSyncing {
                         ProgressView()
                             .controlSize(.small)
+                            .scaleEffect(0.7)
+                            .opacity(0.5)
+                            .transition(.scale(scale: 0.4, anchor: .center).combined(with: .opacity))
                     } else {
                         Button {
                             Task {
@@ -198,12 +144,101 @@ struct Sidebar: View {
                             }
                         } label: {
                             Label("Refresh", systemImage: "arrow.clockwise")
+                                .contentShape(Rectangle())
                         }
                         .keyboardShortcut("r", modifiers: .command)
+                        .opacity(0.5)
+                        .buttonStyle(.plain)
+                        .background(.clear)
+                        .controlSize(.small)
+                        .labelStyle(.iconOnly)
+                        .transition(.scale(scale: 0.4, anchor: .center).combined(with: .opacity))
+                        .contentShape(Rectangle())
+                    }
+                    
+                    Button {
+                        showChats.toggle()
+                    } label: {
+                        Label("Show/hide chats", systemImage: "chevron.down")
+                            .rotationEffect(showChats ? Angle(degrees: 180) : Angle(degrees: 0))
+                            .contentShape(Rectangle())
+                        
+                    }
+                    .opacity(0.5)
+                    .buttonStyle(.plain)
+                    .background(.clear)
+                    .controlSize(.small)
+                    .labelStyle(.iconOnly)
+                    .contentShape(Rectangle())
+                }
+                .animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: showChats)
+                .animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: syncManager.isSyncing)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                
+                if showChats {
+                    ForEach(
+                        chatCache.conversations
+                            .filter { $0.hasMessages && !$0.isArchived }
+                            .sorted { a, b in
+                                a.lastInteracted > b.lastInteracted
+                            },
+                        id: \.id
+                    ) { conv in
+                        HStack {
+                            Text(conv.title)
+                            Spacer()
+                        }
+                        .padding(10)
+                        .background {
+                            if selectedConversationID == conv.id {
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .glassEffect(in: .rect(cornerRadius: 16.0))
+                                    .transition(
+                                        hSizeClass == .compact
+                                        ? .opacity
+                                        : .opacity.combined(with: .scale(scale: 0.3)).combined(with: .offset(x: -100))
+                                    )
+                            }
+                        }
+                        .animation(.default, value: selectedConversationID)
+                        //.clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            loadConversation(conv.id)
+                            if (conv.agentUsed != nil){
+                                let agent = AgentManager.getAgent(fromUUID: conv.agentUsed!)
+                                if agent != nil { selectedAgent = agent!.id }
+                                else {selectedAgent = nil}
+                            }
+                            else { selectedAgent = nil }
+                            selectedModel = conv.modelUsed
+                            onSidebarSelection?()
+                        }
+                        .contextMenu {
+                            Button {
+                                conversationToRename = conv
+                                renameText = conv.title
+                                showingRenameDialog = true
+                            } label: {
+                                Label("Rename", systemImage: "pencil")
+                            }
+                            
+                            Button(role: .destructive) {
+                                conversationToDelete = conv
+                                showingDeleteConfirmation = true
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
                     }
                 }
             }
-            #endif
+            .animation(.default, value: showChats)
+            .animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: showCustomAgents)
+            //.animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: chatCache.conversations)
+            //.animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: agentManager.customAgents)
+            .navigationTitle("Chats")
             .alert("Rename Conversation", isPresented: $showingRenameDialog) {
                 TextField("Conversation Name", text: $renameText)
                 Button("Cancel", role: .cancel) {
