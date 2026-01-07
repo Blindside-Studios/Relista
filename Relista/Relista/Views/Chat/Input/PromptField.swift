@@ -23,9 +23,20 @@ struct PromptField: View {
     @Binding var useSearch: Bool
     @Binding var useReasoning: Bool
     
+    @Binding var primaryAccentColor: Color
+    @Binding var secondaryAccentColor: Color
+    
     @State private var isTryingToAddNewLine = false // workaround for .handled because iPadOS 26 is garbage
 
     @AppStorage("HapticFeedbackForMessageGeneration") private var vibrateOnTokensReceived: Bool = true
+    
+    private var cornerRadius: Int{
+        #if os(macOS)
+        18
+        #else
+        22
+        #endif
+    }
 
     var body: some View {
         #if os(macOS)
@@ -52,15 +63,12 @@ struct PromptField: View {
                         return .ignored
                     }
                 }
-                //.padding(spacing)
-            CommandBar(useSearch: $useSearch, useReasoning: $useReasoning, selectedModel: $selectedModel, conversationID: $conversationID, sendMessage: sendMessage, sendMessageAsSystem: sendMessageAsSystem, appendDummyMessages: appendDummyMessages)
+            //.padding(spacing)
+            CommandBar(useSearch: $useSearch, useReasoning: $useReasoning, selectedModel: $selectedModel, conversationID: $conversationID, secondaryAccentColor: $secondaryAccentColor, sendMessage: sendMessage, sendMessageAsSystem: sendMessageAsSystem, appendDummyMessages: appendDummyMessages)
         }
         .padding(spacing)
-        #if os(macOS)
-        .glassEffect(in: .rect(cornerRadius: 18))
-        #else
-        .glassEffect(in: .rect(cornerRadius: 22))
-        #endif
+        .glassEffect(in: .rect(cornerRadius: CGFloat(cornerRadius)))
+        //.shadow(color: primaryAccentColor.opacity(0.4), radius: 20)
         .padding(8)
         .onChange(of: selectedAgent, refreshPlaceHolder)
     }

@@ -13,6 +13,7 @@ struct CommandBar: View {
     @Binding var selectedModel: String
     @State var chatCache = ChatCache.shared
     @Binding var conversationID: UUID
+    @Binding var secondaryAccentColor: Color
     
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
@@ -51,7 +52,7 @@ struct CommandBar: View {
             }
             .opacity(0.75)
             
-            SendMessageButton(conversationID: $conversationID, sendMessage: sendMessage, sendMessageAsSystem: sendMessageAsSystem)
+            SendMessageButton(conversationID: $conversationID, sendMessage: sendMessage, sendMessageAsSystem: sendMessageAsSystem, accentColor: $secondaryAccentColor)
         }
         .animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: useSearch)
         .animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: useReasoning)

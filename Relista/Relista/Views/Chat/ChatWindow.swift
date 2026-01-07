@@ -18,10 +18,12 @@ struct ChatWindow: View {
     @Binding var useReasoning: Bool
 
     @State private var scrollWithAnimation = true
+    @State private var primaryAccentColor: Color = .clear
+    @State private var secondaryAccentColor: Color = .primary
 
     var body: some View {
         ZStack{
-            ChatBackground(selectedAgent: $selectedAgent, selectedChat: $conversationID)
+            ChatBackground(selectedAgent: $selectedAgent, selectedChat: $conversationID, primaryAccentColor: $primaryAccentColor, secondaryAccentColor: $secondaryAccentColor)
                 //.ignoresSafeArea(edges: .top)
                 //.ignoresSafeArea()
             
@@ -57,7 +59,7 @@ struct ChatWindow: View {
                             #endif
                         }
                         .safeAreaBar(edge: .bottom, spacing: 0){
-                            InputUI(conversationID: $conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, useSearch: $useSearch, useReasoning: $useReasoning)
+                            InputUI(conversationID: $conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, useSearch: $useSearch, useReasoning: $useReasoning, primaryAccentColor: $primaryAccentColor, secondaryAccentColor: $secondaryAccentColor)
                         }
                         .onChange(of: conversationID) { _, _ in
                             // scroll to last user/system message when switching conversations

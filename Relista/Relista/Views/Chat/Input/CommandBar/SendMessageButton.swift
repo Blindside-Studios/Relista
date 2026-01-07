@@ -14,6 +14,8 @@ struct SendMessageButton: View {
     let sendMessage: () -> Void
     let sendMessageAsSystem: () -> Void
     
+    @Binding var accentColor: Color
+    
     var body: some View {
         Button {
             let chat = chatCache.getChat(for: conversationID)
@@ -43,6 +45,8 @@ struct SendMessageButton: View {
             .animation(.bouncy(duration: 0.3, extraBounce: 0.15), value: isGenerating)
         }
         .buttonStyle(.glassProminent)
+        .tint(accentColor)
+        .animation(.default, value: accentColor)
         .labelStyle(.iconOnly)
         .buttonBorderShape(.circle)
         .clipped()

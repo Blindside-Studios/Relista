@@ -15,6 +15,8 @@ struct InputUI: View {
     @Binding var selectedModel: String
     @Binding var useSearch: Bool
     @Binding var useReasoning: Bool
+    @Binding var primaryAccentColor: Color
+    @Binding var secondaryAccentColor: Color
     
     // own logic
     @AppStorage("APIKeyMistral") private var apiKey: String = ""
@@ -56,7 +58,7 @@ struct InputUI: View {
                         AnyTransition.blurFade.combined(with: .offset(y: -150)).combined(with: .opacity)
                     )
                     
-                    PromptField(conversationID: $conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, useSearch: $useSearch, useReasoning: $useReasoning)
+                    PromptField(conversationID: $conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, useSearch: $useSearch, useReasoning: $useReasoning, primaryAccentColor: $primaryAccentColor, secondaryAccentColor: $secondaryAccentColor)
                 }
             } else {
                 VStack{
@@ -80,7 +82,7 @@ struct InputUI: View {
                             AnyTransition.blurFade.combined(with: .offset(y: -150)).combined(with: .opacity)
                         )
                     }
-                    PromptField(conversationID: $conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, useSearch: $useSearch, useReasoning: $useReasoning)
+                    PromptField(conversationID: $conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, useSearch: $useSearch, useReasoning: $useReasoning, primaryAccentColor: $primaryAccentColor, secondaryAccentColor: $secondaryAccentColor)
                     if isChatBlank {
                         // double spacer so the actual content is above center
                         Spacer()
