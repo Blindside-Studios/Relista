@@ -7,6 +7,7 @@
 
 import SwiftUI
 import MarkdownUI
+import Textual
 
 struct MessageModel: View {
     let message: Message
@@ -20,8 +21,9 @@ struct MessageModel: View {
     var body: some View {
         VStack{
             HStack {
-                Markdown(message.text)
-                    .textSelection(.enabled)
+                StructuredText(markdown: message.text,
+                               patternOptions: .init(mathExpressions: true))
+                .textual.textSelection(.enabled)
                     .padding()
                 
                 Spacer()

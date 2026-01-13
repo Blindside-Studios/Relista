@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0ABA50D12EB800D300FE0182 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 0ABA50D02EB800D300FE0182 /* MarkdownUI */; };
+		0A886BC52F16DC5500169EFB /* Textual in Frameworks */ = {isa = PBXBuildFile; productRef = 0A886BC42F16DC5500169EFB /* Textual */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,7 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0ABA50D12EB800D300FE0182 /* MarkdownUI in Frameworks */,
+				0A886BC52F16DC5500169EFB /* Textual in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -70,7 +70,7 @@
 			);
 			name = Relista;
 			packageProductDependencies = (
-				0ABA50D02EB800D300FE0182 /* MarkdownUI */,
+				0A886BC42F16DC5500169EFB /* Textual */,
 			);
 			productName = Relista;
 			productReference = 0ABA50AF2EB7DE3A00FE0182 /* Relista.app */;
@@ -101,7 +101,7 @@
 			mainGroup = 0ABA50A62EB7DE3A00FE0182;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				0ABA50CF2EB800D300FE0182 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
+				0A886BC32F16DC5500169EFB /* XCRemoteSwiftPackageReference "textual" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0ABA50B02EB7DE3A00FE0182 /* Products */;
@@ -388,21 +388,21 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		0ABA50CF2EB800D300FE0182 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
+		0A886BC32F16DC5500169EFB /* XCRemoteSwiftPackageReference "textual" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
+			repositoryURL = "https://github.com/gonzalezreal/textual";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 2.4.1;
+				minimumVersion = 0.2.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		0ABA50D02EB800D300FE0182 /* MarkdownUI */ = {
+		0A886BC42F16DC5500169EFB /* Textual */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 0ABA50CF2EB800D300FE0182 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
-			productName = MarkdownUI;
+			package = 0A886BC32F16DC5500169EFB /* XCRemoteSwiftPackageReference "textual" */;
+			productName = Textual;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
