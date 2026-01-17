@@ -119,7 +119,8 @@ class ConversationManager {
     }
     
     // save messages for a specific conversation
-    static func saveMessages(for conversationID: UUID, messages: [Message], syncToCloudKit: Bool = true) throws {
+    // Only marks specific changed messages for push (avoids rate limiting)
+    static func saveMessages(for conversationID: UUID, messages: [Message], changedMessageIDs: Set<UUID>? = nil, syncToCloudKit: Bool = true) throws {
         // create conversation folder if needed
         let conversationFolder = conversationsURL.appendingPathComponent(conversationID.uuidString)
 
@@ -139,11 +140,12 @@ class ConversationManager {
         // Sync messages to CloudKit (unless called from CloudKit sync itself)
         if syncToCloudKit {
             Task {
-                // Mark all messages in this conversation for push
-                // (CloudKit doesn't have per-conversation filtering for messages,
-                //  so we track by conversation ID internally)
-                for message in messages {
-                    await messageSyncEngine.markForPush(message.id)
+                // Only mark changed messages for push (or all if not specified)
+                let messagesToMark = changedMessageIDs ?? Set(messages.map { $0.id })
+                print("  📝 Marking \(messagesToMark.count) message(s) for push")
+
+                for messageID in messagesToMark {
+                    await messageSyncEngine.markForPush(messageID)
                 }
 
                 await messageSyncEngine.startDebouncedPush {

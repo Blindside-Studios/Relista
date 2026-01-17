@@ -54,7 +54,8 @@ actor SyncEngine<Item: Syncable> {
     private var debouncedPushTask: Task<Void, Never>?
 
     /// Delay before actually pushing (batches rapid changes together)
-    private let pushDebounceDelay: TimeInterval = 2.0
+    /// Reduced to 0.5s to minimize chance of app being backgrounded before push completes
+    private let pushDebounceDelay: TimeInterval = 0.5
 
     // MARK: - Retry Configuration
 
@@ -154,19 +155,23 @@ actor SyncEngine<Item: Syncable> {
             }
         }
 
-        // Process pushes
-        for id in pendingPushes {
-            guard let item = items.first(where: { $0.id == id }) else {
-                // Item no longer exists locally - remove from pending
-                succeededPushes.insert(id)
-                continue
-            }
-
+        // Batch push items (more efficient and avoids rate limiting)
+        let itemsToPush = items.filter { pendingPushes.contains($0.id) }
+        if !itemsToPush.isEmpty {
             do {
-                try await push(item)
-                succeededPushes.insert(id)
+                let pushedIDs = try await pushBatch(itemsToPush)
+                succeededPushes.formUnion(pushedIDs)
             } catch {
-                print("❌ Failed to push \(recordType) \(id.uuidString.prefix(8)): \(error.localizedDescription)")
+                print("❌ Batch push failed, falling back to individual pushes: \(error.localizedDescription)")
+                // Fallback to individual pushes if batch fails
+                for item in itemsToPush {
+                    do {
+                        try await push(item)
+                        succeededPushes.insert(item.id)
+                    } catch {
+                        print("❌ Failed to push \(recordType) \(item.id.uuidString.prefix(8)): \(error.localizedDescription)")
+                    }
+                }
             }
         }
 
@@ -180,15 +185,92 @@ actor SyncEngine<Item: Syncable> {
         }
     }
 
+    /// Push multiple items to CloudKit in a single batch operation
+    /// - Parameter items: The items to push
+    /// - Returns: Set of successfully pushed item IDs
+    private func pushBatch(_ items: [Item]) async throws -> Set<UUID> {
+        guard !items.isEmpty else { return Set() }
+
+        print("  📦 Batch pushing \(items.count) \(recordType)(s)...")
+
+        // Convert all items to CloudKit records
+        var records: [CKRecord] = []
+        for item in items {
+            do {
+                let record = try item.toCloudKitRecord()
+                records.append(record)
+            } catch {
+                print("  ⚠️  Failed to convert \(recordType) \(item.id.uuidString.prefix(8)) to record: \(error)")
+            }
+        }
+
+        guard !records.isEmpty else {
+            throw SyncError.invalidData("No valid records to push")
+        }
+
+        // Use CKModifyRecordsOperation for batch save
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Set<UUID>, Error>) in
+            let modifyOp = CKModifyRecordsOperation(recordsToSave: records, recordIDsToDelete: nil)
+            modifyOp.savePolicy = .allKeys  // Save all fields (overwrite server if needed)
+            modifyOp.configuration.allowsCellularAccess = true
+
+            var succeededIDs = Set<UUID>()
+
+            modifyOp.perRecordSaveBlock = { recordID, result in
+                switch result {
+                case .success(let savedRecord):
+                    if let uuid = UUID(uuidString: savedRecord.recordID.recordName) {
+                        succeededIDs.insert(uuid)
+                        print("  ✅ Batched push: \(self.recordType) \(uuid.uuidString.prefix(8))...")
+                    }
+                case .failure(let error):
+                    print("  ❌ Batched push failed for \(recordID.recordName.prefix(8)): \(error.localizedDescription)")
+                }
+            }
+
+            modifyOp.modifyRecordsResultBlock = { result in
+                switch result {
+                case .success:
+                    print("  ✅ Batch operation complete: \(succeededIDs.count)/\(records.count) succeeded")
+                    continuation.resume(returning: succeededIDs)
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
+            }
+
+            self.database.add(modifyOp)
+        }
+    }
+
     /// Push a single item to CloudKit
     /// - Parameter item: The item to push
     private func push(_ item: Item) async throws {
         try await executeWithRetry(operationName: "push(\(recordType))") {
             let record = try item.toCloudKitRecord()
 
+            // Use save policy that overwrites server record if different (avoids conflicts)
+            // This implements "last write wins" without needing to fetch and compare
+            let configuration = CKOperation.Configuration()
+            configuration.allowsCellularAccess = true
+
             do {
-                _ = try await self.database.save(record)
-                print("  ✅ Pushed \(self.recordType) \(item.id.uuidString.prefix(8))...")
+                let modifyOp = CKModifyRecordsOperation(recordsToSave: [record], recordIDsToDelete: nil)
+                modifyOp.savePolicy = .changedKeys  // Only update changed fields
+                modifyOp.configuration = configuration
+
+                // Use async/await wrapper for operation
+                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                    modifyOp.modifyRecordsResultBlock = { result in
+                        switch result {
+                        case .success:
+                            print("  ✅ Pushed \(self.recordType) \(item.id.uuidString.prefix(8))...")
+                            continuation.resume()
+                        case .failure(let error):
+                            continuation.resume(throwing: error)
+                        }
+                    }
+                    self.database.add(modifyOp)
+                }
             } catch let error as CKError where error.code == .serverRecordChanged {
                 // Record already exists - fetch and update if our version is newer
                 print("  ⚠️  Server record conflict for \(self.recordType), resolving...")

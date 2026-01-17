@@ -287,8 +287,8 @@ class ChatCache {
         conversation.agentUsed = agent
         conversation.modelUsed = modelName
 
-        // Save user message immediately
-        saveMessages(for: conversationID)
+        // Save user message immediately (only mark this new message for push)
+        saveMessages(for: conversationID, changedMessageIDs: [userMsg.id])
         print("  ✓ Message saved to disk (now \(chat.messages.count) total messages)")
 
         // Debug: Verify message was actually written to disk
@@ -375,11 +375,13 @@ class ChatCache {
                     cancellationFlags[conversationID] = false // Clear cancellation flag
 
                     // Update conversation metadata
+                    let assistantMessageID = chat.messages[chat.messages.count - 1].id
                     chat.messages[chat.messages.count - 1].timeStamp = .now
                     conversation.lastInteracted = Date.now
                     conversation.lastModified = Date.now
 
-                    saveMessages(for: conversationID)
+                    // Only mark the assistant message for push (it's the only one that changed)
+                    saveMessages(for: conversationID, changedMessageIDs: [assistantMessageID])
                     syncConversation(id: conversationID)
                     onCompletion?()
 
@@ -438,17 +440,19 @@ class ChatCache {
         conversation.lastInteracted = Date.now
         conversation.lastModified = Date.now
 
-        // Save system message immediately
-            if conversation.hasMessages { saveMessages(for: conversationID)}
+        // Save system message immediately (only mark this new message for push)
+        if conversation.hasMessages {
+            saveMessages(for: conversationID, changedMessageIDs: [userMsg.id])
+        }
     }
 
     // MARK: - Persistence
 
-    func saveMessages(for id: UUID) {
+    func saveMessages(for id: UUID, changedMessageIDs: Set<UUID>? = nil) {
         guard let chat = loadedChats[id] else { return }
 
         do {
-            try ConversationManager.saveMessages(for: id, messages: chat.messages)
+            try ConversationManager.saveMessages(for: id, messages: chat.messages, changedMessageIDs: changedMessageIDs)
         } catch {
             print("Error saving messages for \(id): \(error)")
         }

@@ -142,27 +142,82 @@ struct PromptField: View {
     func appendDummyMessages(){
         let chat = chatCache.getChat(for: conversationID)
 
-        chat.messages.append(Message(id: UUID(), text: "This is an example conversational flow", role: .user, attachmentLinks: [], timeStamp: .now, conversationID: conversationID))
-        chat.messages.append(Message(id: UUID(), text: "That's right, we aren't actually talking, this is just debug messages being added.", role: .assistant, attachmentLinks: [], timeStamp: .now, conversationID: conversationID))
-        chat.messages.append(Message(id: UUID(), text: "I appreciate you being so honest about what you are.", role: .user, attachmentLinks: [], timeStamp: .now, conversationID: conversationID))
-        chat.messages.append(Message(id: UUID(), text: "Indeed. I am an AI. Actually I am not. But I still try to sound like one.", role: .assistant, attachmentLinks: [], timeStamp: .now, conversationID: conversationID))
-        chat.messages.append(Message(id: UUID(), text: "I can tell.", role: .user, attachmentLinks: [], timeStamp: .now, conversationID: conversationID))
-        chat.messages.append(Message(id: UUID(), text: "Is something wrong with my immaculate AI voice?", role: .assistant, attachmentLinks: [], timeStamp: .now, conversationID: conversationID))
-        chat.messages.append(Message(id: UUID(), text: "Well it you don't feel like an AI if I know you're just a debug conversation", role: .user, attachmentLinks: [], timeStamp: .now, conversationID: conversationID))
-        chat.messages.append(Message(id: UUID(), text: "Ah, well, look who's talking.", role: .assistant, attachmentLinks: [], timeStamp: .now, conversationID: conversationID))
-        chat.messages.append(Message(id: UUID(), text: "Excuse me? Do you mean to imply that we live in a simulation?", role: .user, attachmentLinks: [], timeStamp: .now, conversationID: conversationID))
-        chat.messages.append(Message(id: UUID(), text: "No, in a debugger.", role: .assistant, attachmentLinks: [], timeStamp: .now, conversationID: conversationID))
-        chat.messages.append(Message(id: UUID(), text: "Why would you think that?", role: .user, attachmentLinks: [], timeStamp: .now, conversationID: conversationID))
-        chat.messages.append(Message(id: UUID(), text: "Because the user clicked the ant button to add our messages.", role: .assistant, attachmentLinks: [], timeStamp: .now, conversationID: conversationID))
-        chat.messages.append(Message(id: UUID(), text: "How do you know?", role: .user, attachmentLinks: [], timeStamp: .now, conversationID: conversationID))
-        chat.messages.append(Message(id: UUID(), text: "How do you not?", role: .assistant, attachmentLinks: [], timeStamp: .now, conversationID: conversationID))
-        chat.messages.append(Message(id: UUID(), text: "What?", role: .user, attachmentLinks: [], timeStamp: .now, conversationID: conversationID))
-        chat.messages.append(Message(id: UUID(), text: "Magic.", role: .assistant, attachmentLinks: [], timeStamp: .now, conversationID: conversationID))
-        chat.messages.append(Message(id: UUID(), text: "Please tell me!", role: .user, attachmentLinks: [], timeStamp: .now, conversationID: conversationID))
-        chat.messages.append(Message(id: UUID(), text: "I'm sorry but I prefer not to continue this conversation. I'm still learning so I appreciate your understanding and patience.🙏", role: .assistant, attachmentLinks: [], timeStamp: .now, conversationID: conversationID))
+        var newMessageIDs: [UUID] = []
 
-        // Save the dummy messages
-        chatCache.saveMessages(for: conversationID)
+        let msg1 = Message(id: UUID(), text: "This is an example conversational flow", role: .user, attachmentLinks: [], timeStamp: .now, conversationID: conversationID)
+        chat.messages.append(msg1)
+        newMessageIDs.append(msg1.id)
+
+        let msg2 = Message(id: UUID(), text: "That's right, we aren't actually talking, this is just debug messages being added.", role: .assistant, attachmentLinks: [], timeStamp: .now, conversationID: conversationID)
+        chat.messages.append(msg2)
+        newMessageIDs.append(msg2.id)
+
+        let msg3 = Message(id: UUID(), text: "I appreciate you being so honest about what you are.", role: .user, attachmentLinks: [], timeStamp: .now, conversationID: conversationID)
+        chat.messages.append(msg3)
+        newMessageIDs.append(msg3.id)
+
+        let msg4 = Message(id: UUID(), text: "Indeed. I am an AI. Actually I am not. But I still try to sound like one.", role: .assistant, attachmentLinks: [], timeStamp: .now, conversationID: conversationID)
+        chat.messages.append(msg4)
+        newMessageIDs.append(msg4.id)
+
+        let msg5 = Message(id: UUID(), text: "I can tell.", role: .user, attachmentLinks: [], timeStamp: .now, conversationID: conversationID)
+        chat.messages.append(msg5)
+        newMessageIDs.append(msg5.id)
+
+        let msg6 = Message(id: UUID(), text: "Is something wrong with my immaculate AI voice?", role: .assistant, attachmentLinks: [], timeStamp: .now, conversationID: conversationID)
+        chat.messages.append(msg6)
+        newMessageIDs.append(msg6.id)
+
+        let msg7 = Message(id: UUID(), text: "Well it you don't feel like an AI if I know you're just a debug conversation", role: .user, attachmentLinks: [], timeStamp: .now, conversationID: conversationID)
+        chat.messages.append(msg7)
+        newMessageIDs.append(msg7.id)
+
+        let msg8 = Message(id: UUID(), text: "Ah, well, look who's talking.", role: .assistant, attachmentLinks: [], timeStamp: .now, conversationID: conversationID)
+        chat.messages.append(msg8)
+        newMessageIDs.append(msg8.id)
+
+        let msg9 = Message(id: UUID(), text: "Excuse me? Do you mean to imply that we live in a simulation?", role: .user, attachmentLinks: [], timeStamp: .now, conversationID: conversationID)
+        chat.messages.append(msg9)
+        newMessageIDs.append(msg9.id)
+
+        let msg10 = Message(id: UUID(), text: "No, in a debugger.", role: .assistant, attachmentLinks: [], timeStamp: .now, conversationID: conversationID)
+        chat.messages.append(msg10)
+        newMessageIDs.append(msg10.id)
+
+        let msg11 = Message(id: UUID(), text: "Why would you think that?", role: .user, attachmentLinks: [], timeStamp: .now, conversationID: conversationID)
+        chat.messages.append(msg11)
+        newMessageIDs.append(msg11.id)
+
+        let msg12 = Message(id: UUID(), text: "Because the user clicked the ant button to add our messages.", role: .assistant, attachmentLinks: [], timeStamp: .now, conversationID: conversationID)
+        chat.messages.append(msg12)
+        newMessageIDs.append(msg12.id)
+
+        let msg13 = Message(id: UUID(), text: "How do you know?", role: .user, attachmentLinks: [], timeStamp: .now, conversationID: conversationID)
+        chat.messages.append(msg13)
+        newMessageIDs.append(msg13.id)
+
+        let msg14 = Message(id: UUID(), text: "How do you not?", role: .assistant, attachmentLinks: [], timeStamp: .now, conversationID: conversationID)
+        chat.messages.append(msg14)
+        newMessageIDs.append(msg14.id)
+
+        let msg15 = Message(id: UUID(), text: "What?", role: .user, attachmentLinks: [], timeStamp: .now, conversationID: conversationID)
+        chat.messages.append(msg15)
+        newMessageIDs.append(msg15.id)
+
+        let msg16 = Message(id: UUID(), text: "Magic.", role: .assistant, attachmentLinks: [], timeStamp: .now, conversationID: conversationID)
+        chat.messages.append(msg16)
+        newMessageIDs.append(msg16.id)
+
+        let msg17 = Message(id: UUID(), text: "Please tell me!", role: .user, attachmentLinks: [], timeStamp: .now, conversationID: conversationID)
+        chat.messages.append(msg17)
+        newMessageIDs.append(msg17.id)
+
+        let msg18 = Message(id: UUID(), text: "I'm sorry but I prefer not to continue this conversation. I'm still learning so I appreciate your understanding and patience.🙏", role: .assistant, attachmentLinks: [], timeStamp: .now, conversationID: conversationID)
+        chat.messages.append(msg18)
+        newMessageIDs.append(msg18.id)
+
+        // Save the dummy messages (mark only the new messages for push)
+        chatCache.saveMessages(for: conversationID, changedMessageIDs: Set(newMessageIDs))
         chatCache.syncConversation(id: conversationID)
     }
     
