@@ -30,18 +30,19 @@ struct ChatWindow: View {
             GeometryReader { geo in
                 // Access chat directly from cache - it's loaded in .task
                 if let chat = chatCache.loadedChats[conversationID] {
+                    let sortedMessages = chat.messages.sorted { $0.timeStamp < $1.timeStamp }
                     ScrollViewReader { proxy in
                         ScrollView(.vertical){
                             LazyVStack{
-                                ForEach(chat.messages.sorted { $0.timeStamp < $1.timeStamp }){ message in
+                                ForEach(sortedMessages){ message in
                                     if(message.role == .assistant){
                                         MessageModel(message: message)
-                                            .frame(minHeight: message.id == chat.messages.last!.id ? geo.size.height * 0.8 : 0)
+                                            .frame(minHeight: message.id == sortedMessages.last!.id ? geo.size.height * 0.8 : 0)
                                             .id(message.id)
                                     }
                                     else if (message.role == .user || message.role == .system){
                                         MessageUser(message: message, availableWidth: geo.size.width)
-                                            .frame(minHeight: message.id == chat.messages.last!.id ? geo.size.height : 0)
+                                            .frame(minHeight: message.id == sortedMessages.last!.id ? geo.size.height : 0)
                                             .id(message.id)
                                     }
                                 }
