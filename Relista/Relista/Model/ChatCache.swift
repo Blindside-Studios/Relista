@@ -45,7 +45,7 @@ class ChatCache {
 
     /// Dictionary tracking cancellation requests for conversations
     private var cancellationFlags: [UUID: Bool] = [:]
-
+    
     private init() {
         // Load conversations from disk on init
         do {
@@ -280,8 +280,19 @@ class ChatCache {
 
         Task {
             do {
-                let service = Mistral(apiKey: apiKey)
-                let stream = try await service.streamMessage(messages: chat.messages, modelName: modelName, agent: agent, useSearch: useSearch)
+                // Determine provider from model
+                let model = ModelList.getModelFromSlug(slug: modelName)
+                let stream: AsyncThrowingStream<StreamChunk, Error>
+
+                switch model.provider {
+                case .anthropic:
+                    let service = Claude(apiKey: apiKey)
+                    stream = try await service.streamMessage(messages: chat.messages, modelName: modelName, agent: agent, useSearch: useSearch)
+                default:
+                    // Default to Mistral for all other providers (OpenRouter compatibility)
+                    let service = Mistral(apiKey: apiKey)
+                    stream = try await service.streamMessage(messages: chat.messages, modelName: modelName, agent: agent, useSearch: useSearch)
+                }
 
                 // Create blank assistant message
                 let assistantMsg = Message(
@@ -363,7 +374,8 @@ class ChatCache {
                     cleanupUnusedChats()
                 }
                 
-                if isChatNew { try? conversation.title = await service.generateChatName(messages: chat.messages) }
+                @AppStorage("APIKeyMistral") var mistralApiKey: String = ""
+                if isChatNew { try? conversation.title = await Mistral(apiKey: mistralApiKey).generateChatName(messages: chat.messages) }
                 // save again to make sure it saves our chat title
                 try? ConversationManager.saveIndex(conversations: conversations)
                 

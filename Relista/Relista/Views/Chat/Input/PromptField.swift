@@ -15,7 +15,8 @@ struct PromptField: View {
     @Binding var selectedAgent: UUID?
     @Binding var selectedModel: String
     @FocusState private var isTextFieldFocused: Bool
-    @AppStorage("APIKeyMistral") private var apiKey: String = ""
+    @AppStorage("APIKeyMistral") private var mistralApiKey: String = ""
+    @AppStorage("APIKeyClaude") private var claudeAPIKey: String = ""
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @State private var chatCache = ChatCache.shared
     @State private var placeHolder = ChatPlaceHolders.returnRandomString()
@@ -74,6 +75,18 @@ struct PromptField: View {
     }
     
     func sendMessage(){
+        let model = ModelList.getModelFromSlug(slug: selectedModel)
+        var apiKey = ""
+
+        switch model.provider {
+        case .mistral:
+            apiKey = mistralApiKey
+        case .anthropic:
+            apiKey = claudeAPIKey
+        default:
+            return;
+        }
+        
         let chat = chatCache.getChat(for: conversationID)
         if !chat.isGenerating && !isTryingToAddNewLine {
             placeHolder = ChatPlaceHolders.returnAppropriatePlaceholder(agentUUID: selectedAgent)
