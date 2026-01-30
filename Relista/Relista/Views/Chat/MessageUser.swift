@@ -15,6 +15,8 @@ struct MessageUser: View {
     
     @Binding var primaryAccentColor: Color
     
+    @AppStorage("ShowUserMessageToolbars") private var showUserMessageToolbars: Bool = false
+    
     private var needsTruncation: Bool {
         naturalHeight > 200
     }
@@ -51,44 +53,57 @@ struct MessageUser: View {
                                 }
                             }
                         }
-                    
-                    HStack(spacing: 8){
-                        if needsTruncation {
-                            Button{
-                                withAnimation(.bouncy(duration: 0.3, extraBounce: 0.05)) {
-                                    isExpanded.toggle()
-                                }
+                        .contextMenu{
+                            Button {
+                                #if os(macOS)
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(message.text, forType: .string)
+                                #else
+                                UIPasteboard.general.string = message.text
+                                #endif
                             } label: {
-                                HStack{
-                                    Label("Expand/collapse full message", systemImage: "chevron.down")
-                                        .rotationEffect(isExpanded ? Angle(degrees: -180) : Angle(degrees: 0))
-                                    //.animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: isExpanded)
-                                }
+                                Label("Copy", systemImage: "doc.on.doc")
                             }
-                            .opacity(0.6)
-                            .contentShape(Rectangle())
+                        }
+                    
+                    if showUserMessageToolbars{
+                        HStack(spacing: 8){
+                            if needsTruncation {
+                                Button{
+                                    withAnimation(.bouncy(duration: 0.3, extraBounce: 0.05)) {
+                                        isExpanded.toggle()
+                                    }
+                                } label: {
+                                    HStack{
+                                        Label("Expand/collapse full message", systemImage: "chevron.down")
+                                            .rotationEffect(isExpanded ? Angle(degrees: -180) : Angle(degrees: 0))
+                                        //.animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: isExpanded)
+                                    }
+                                }
+                                .contentShape(Rectangle())
+                                .buttonStyle(.plain)
+                                .labelStyle(.iconOnly)
+                                .backgroundStyle(.clear)
+                            }
+                            
+                            Button {
+                                #if os(macOS)
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(message.text, forType: .string)
+                                #else
+                                UIPasteboard.general.string = message.text
+                                #endif
+                            } label: {
+                                Label("Copy", systemImage: "doc.on.doc")
+                                    .contentShape(Rectangle())
+                                    .scaleEffect(0.8)
+                            }
                             .buttonStyle(.plain)
                             .labelStyle(.iconOnly)
-                            .backgroundStyle(.clear)
                         }
-                        
-                        Button {
-                            #if os(macOS)
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(message.text, forType: .string)
-                            #else
-                            UIPasteboard.general.string = message.text
-                            #endif
-                        } label: {
-                            Label("Copy", systemImage: "doc.on.doc")
-                                .contentShape(Rectangle())
-                                .scaleEffect(0.8)
-                        }
-                        .buttonStyle(.plain)
-                        .labelStyle(.iconOnly)
+                        .opacity(0.5)
+                        .padding(.horizontal)
                     }
-                    .opacity(0.5)
-                    .padding(.horizontal)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
