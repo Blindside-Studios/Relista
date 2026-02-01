@@ -97,8 +97,12 @@ struct ModelPickerContents: View {
                 }
                 .padding(.vertical, 4.0)
                 .padding(.horizontal, 8.0)
-                .background(selectedModelSlug == model.modelID ? AnyShapeStyle(.thickMaterial) : AnyShapeStyle(.clear))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .background{
+                    if selectedModelSlug == model.modelID{
+                        RoundedRectangle(cornerRadius: 12.0, style: .continuous)
+                            .glassEffect(in: .rect(cornerRadius: 12.0))
+                    }
+                }
                 .contentShape(Rectangle())
                 .onTapGesture {
                     selectedModelSlug = model.modelID

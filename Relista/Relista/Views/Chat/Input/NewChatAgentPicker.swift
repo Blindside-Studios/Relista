@@ -17,13 +17,25 @@ struct NewChatAgentPicker: View {
     var body: some View {
         ScrollView(.horizontal) {
             HStack {
-                HStack{
+                HStack {
                     Text("🐙 Default")
                     Spacer()
                         .frame(width: 2)
                 }
                 .padding(6)
-                .glassEffect(.regular.tint(selectedAgent == nil ? .blue.opacity(0.3) : .clear), in: .rect(cornerRadius: 10, style: .continuous))
+                .background {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(.ultraThickMaterial)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(Color.blue.opacity(selectedAgent == nil ? 0.5 : 0))
+                        }
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .strokeBorder(.white.opacity(0.15), lineWidth: 1)
+                        }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 .animation(.default, value: selectedAgent)
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -45,13 +57,25 @@ struct NewChatAgentPicker: View {
                         return .blue
                     }()
                     
-                    HStack{
+                    HStack {
                         Text(agent.icon + " " + agent.name)
                         Spacer()
                             .frame(width: 2)
                     }
                     .padding(6)
-                    .glassEffect(.regular.tint(isCurrentAgent ? primaryAccentColor.opacity(0.3) : .clear), in: .rect(cornerRadius: 10, style: .continuous))
+                    .background {
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(.ultraThickMaterial)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .fill(primaryAccentColor.opacity(isCurrentAgent ? 0.5 : 0))
+                            }
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .strokeBorder(.white.opacity(0.15), lineWidth: 1)
+                            }
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                     .animation(.default, value: isCurrentAgent)
                     .contentShape(Rectangle())
                     .onTapGesture {
@@ -68,7 +92,7 @@ struct NewChatAgentPicker: View {
             .font(.callout)
             .padding(.horizontal, 12)
         }
-        .scrollClipDisabled()
+        //.scrollClipDisabled()
         .scrollIndicators(.hidden)
         .blocksHorizontalSidebarGesture()
     }
