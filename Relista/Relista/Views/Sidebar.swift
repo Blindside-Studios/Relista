@@ -23,6 +23,8 @@ struct Sidebar: View {
     @State var showingDeleteConfirmation: Bool = false
     @State var conversationToDelete: Conversation? = nil
     
+    @State private var chatFilter: ChatFilter = .kind(.recents)
+    
     @ObservedObject private var agentManager = AgentManager.shared
     
     @AppStorage("CustomAgentsInSidebarAreExpanded") private var showCustomAgents: Bool = true
@@ -126,9 +128,46 @@ struct Sidebar: View {
                 .backgroundStyle(.clear)
                 
                 HStack(alignment: .center){
-                    Text("Recents")
-                        .font(.caption)
-                        .opacity(0.5)
+                    Menu {
+                        Section("Show") {
+                            ForEach(ChatKind.allCases, id: \.self) { kind in
+                                Button {
+                                    chatFilter = .kind(kind)
+                                } label: {
+                                    if case .kind(kind) = chatFilter {
+                                        Label(kind.rawValue, systemImage: "checkmark")
+                                    } else {
+                                        Text(kind.rawValue)
+                                    }
+                                }
+                            }
+                        }
+
+                        if !agentManager.customAgents.isEmpty {
+                            Section("By Squidlet") {
+                                ForEach(agentManager.customAgents) { agent in
+                                    Button {
+                                        chatFilter = .agent(agent.id)
+                                    } label: {
+                                        if case .agent(agent.id) = chatFilter {
+                                            Label(agent.icon + " " + agent.name, systemImage: "checkmark")
+                                        } else {
+                                            Text(agent.icon + " " + agent.name)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Text(chatFilterLabel)
+                            Image(systemName: "chevron.up.chevron.down")
+                        }
+                        .opacity(0.7)
+                    }
+                    .menuStyle(.button)
+                    .buttonStyle(.plain)
+                    .labelStyle(.titleAndIcon)
                     VStack{
                         if !ChatCache.shared.isLoading{
                             Divider()
@@ -141,6 +180,7 @@ struct Sidebar: View {
                         }
                     }
                     .animation(.default, value: ChatCache.shared.isLoading)
+                    #if os(macOS)
                     Button {
                         Task {
                             await reloadSidebar()
@@ -157,30 +197,28 @@ struct Sidebar: View {
                     .controlSize(.small)
                     .labelStyle(.iconOnly)
                     .contentShape(Rectangle())
-                    
-                    Button {
-                        showChats.toggle()
-                    } label: {
-                        Label("Show/hide chats", systemImage: "chevron.down")
-                            .rotationEffect(showChats ? Angle(degrees: 180) : Angle(degrees: 0))
-                            .contentShape(Rectangle())
-                        
-                    }
-                    .opacity(0.5)
-                    .buttonStyle(.plain)
-                    .background(.clear)
-                    .controlSize(.small)
-                    .labelStyle(.iconOnly)
-                    .contentShape(Rectangle())
+                    #endif
                 }
                 .animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: showChats)
-                .padding(.horizontal, 10)
+                .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 
-                if showChats {
+                if chatFilter != .kind(.hideChats) {
                     ForEach(
                         chatCache.conversations
-                            .filter { $0.hasMessages && !$0.isArchived }
+                            .filter { conv in
+                                guard conv.hasMessages else { return false }
+                                switch chatFilter {
+                                case .kind(.recents):
+                                    return !conv.isArchived
+                                case .kind(.archived):
+                                    return conv.isArchived
+                                case .kind(.hideChats):
+                                    return false
+                                case .agent(let agentID):
+                                    return conv.agentUsed == agentID && !conv.isArchived
+                                }
+                            }
                             .sorted { a, b in
                                 a.lastInteracted > b.lastInteracted
                             },
@@ -267,7 +305,7 @@ struct Sidebar: View {
         .refreshable {
             await performSync()
         }
-#if os(iOS)
+        #if os(iOS)
         .safeAreaBar(edge: .bottom, spacing: 0){
             HStack{
                 Spacer()
@@ -346,6 +384,18 @@ struct Sidebar: View {
         await ConversationManager.refreshConversationsFromStorage()
     }
 
+    var chatFilterLabel: String {
+        switch chatFilter {
+        case .kind(let kind):
+            return kind.rawValue
+        case .agent(let agentID):
+            if let agent = agentManager.customAgents.first(where: { $0.id == agentID }) {
+                return agent.icon + " " + agent.name
+            }
+            return "Unknown Agent"
+        }
+    }
+
     func migrateDataToiCloud() {
         let fileManager = FileManager.default
 
@@ -389,6 +439,17 @@ struct Sidebar: View {
             print("❌ Migration failed: \(error)")
         }
     }
+}
+
+enum ChatKind: String, CaseIterable, Codable {
+    case recents = "Recents"
+    case archived = "Archived"
+    case hideChats = "Hide Chats"
+}
+
+enum ChatFilter: Hashable {
+    case kind(ChatKind)
+    case agent(UUID)
 }
 
 #Preview {
