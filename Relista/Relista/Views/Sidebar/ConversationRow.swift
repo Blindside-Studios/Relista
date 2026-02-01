@@ -46,6 +46,12 @@ struct ConversationRow: View {
             } label: {
                 Label("Rename", systemImage: "pencil")
             }
+            
+            Button {
+                ChatCache.shared.setArchiveStatus(id: conversation.id, to: !conversation.isArchived)
+            } label: {
+                Label(conversation.isArchived ? "Unarchive" : "Archive", systemImage: "archivebox")
+            }
 
             Button(role: .destructive) {
                 onDelete()

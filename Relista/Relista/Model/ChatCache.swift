@@ -116,6 +116,18 @@ class ChatCache {
             print("Error saving renamed conversation: \(error)")
         }
     }
+    
+    func setArchiveStatus(id: UUID, to status: Bool){
+        guard let conversation = getConversation(for: id) else { return }
+        conversation.isArchived = status
+        conversation.lastModified = Date.now
+
+        do {
+            try ConversationManager.saveIndex(conversations: conversations)
+        } catch {
+            print("Error saving (un)archived conversation: \(error)")
+        }
+    }
 
     /// Deletes a conversation
     func deleteConversation(id: UUID) {
