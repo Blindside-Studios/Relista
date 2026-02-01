@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 // MARK: Environment Key for Sidebar Selection
 
@@ -17,6 +18,69 @@ extension EnvironmentValues {
     var onSidebarSelection: (() -> Void)? {
         get { self[SidebarSelectionActionKey.self] }
         set { self[SidebarSelectionActionKey.self] = newValue }
+    }
+}
+
+// MARK: Sidebar Gesture Coordination
+
+@MainActor
+class SidebarGestureCoordinator: ObservableObject {
+    @Published var isBlocked: Bool = false
+}
+
+private struct SidebarGestureCoordinatorKey: EnvironmentKey {
+    static let defaultValue: SidebarGestureCoordinator? = nil
+}
+
+extension EnvironmentValues {
+    var sidebarGestureCoordinator: SidebarGestureCoordinator? {
+        get { self[SidebarGestureCoordinatorKey.self] }
+        set { self[SidebarGestureCoordinatorKey.self] = newValue }
+    }
+}
+
+extension View {
+    /// Blocks the sidebar swipe gesture while this view is being scrolled horizontally
+    func blocksHorizontalSidebarGesture() -> some View {
+        self.modifier(HorizontalScrollBlocker())
+    }
+
+    /// Manually block/unblock the sidebar gesture (useful for text selection)
+    func blocksSidebarGesture(_ blocked: Bool) -> some View {
+        self.modifier(ManualSidebarBlocker(blocked: blocked))
+    }
+}
+
+private struct HorizontalScrollBlocker: ViewModifier {
+    @Environment(\.sidebarGestureCoordinator) private var coordinator
+    @GestureState private var isDragging: Bool = false
+
+    func body(content: Content) -> some View {
+        content
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 5)
+                    .updating($isDragging) { _, state, _ in
+                        state = true
+                    }
+            )
+            .onChange(of: isDragging) { _, newValue in
+                coordinator?.isBlocked = newValue
+            }
+    }
+}
+
+private struct ManualSidebarBlocker: ViewModifier {
+    @Environment(\.sidebarGestureCoordinator) private var coordinator
+    let blocked: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: blocked, initial: true) { _, newValue in
+                coordinator?.isBlocked = newValue
+            }
+            .onDisappear {
+                coordinator?.isBlocked = false
+            }
     }
 }
 
@@ -94,17 +158,19 @@ struct UnifiedSplitView<Sidebar: View, Content: View>: View {
 struct ChatSplitView<Sidebar: View, Content: View>: View {
     let sidebar: Sidebar
     let content: Content
-    
+
     @Binding var isOpen: Bool
     @State private var dragOffset: CGFloat = 0
-    
+    @State private var isGestureActive: Bool = false
+    @StateObject private var gestureCoordinator = SidebarGestureCoordinator()
+
     #if os(iOS)
     private func sidebarSnapHaptic() {
         let generator = UIImpactFeedbackGenerator(style: .rigid)
         generator.impactOccurred()
     }
     #endif
-    
+
     init(isOpen: Binding<Bool>,
          @ViewBuilder sidebar: () -> Sidebar,
          @ViewBuilder content: () -> Content) {
@@ -112,18 +178,19 @@ struct ChatSplitView<Sidebar: View, Content: View>: View {
         self.sidebar = sidebar()
         self.content = content()
     }
-    
+
     var body: some View {
         GeometryReader { geo in
             let width = geo.size.width
             let drawerWidth = width * 0.75
             let baseOffset: CGFloat = isOpen ? drawerWidth : 0
             let currentOffset = min(max(baseOffset + dragOffset, 0), drawerWidth)
-            
+
             ZStack(alignment: .leading) {
-                
+
                 // MAIN CONTENT
                 content
+                    .environment(\.sidebarGestureCoordinator, gestureCoordinator)
                     .contentShape(Rectangle())
                     .opacity(1.0 - ((currentOffset / drawerWidth) * 0.25))
                     .background(Color.gray.opacity((currentOffset / drawerWidth) * 0.25))
@@ -140,7 +207,7 @@ struct ChatSplitView<Sidebar: View, Content: View>: View {
                                 }
                         }
                     }
-                                    
+
                 // SIDEBAR
                 sidebar
                     .frame(width: drawerWidth)
@@ -149,19 +216,30 @@ struct ChatSplitView<Sidebar: View, Content: View>: View {
             .simultaneousGesture(
                 DragGesture(minimumDistance: 10, coordinateSpace: .local)
                     .onChanged { value in
-                        let t = value.translation
-                        guard abs(t.width) > abs(t.height) else {
+                        // Don't activate if content is handling a gesture
+                        if gestureCoordinator.isBlocked {
                             dragOffset = 0
+                            isGestureActive = false
                             return
                         }
-                        dragOffset = t.width
+
+                        // On first change, check if it's a horizontal gesture
+                        if !isGestureActive {
+                            let t = value.translation
+                            guard abs(t.width) > abs(t.height) else { return }
+                            isGestureActive = true
+                        }
+
+                        guard isGestureActive else { return }
+                        dragOffset = value.translation.width
                     }
                     .onEnded { value in
-                        let t = value.translation
-                        guard abs(t.width) > abs(t.height) else {
+                        guard isGestureActive else {
                             dragOffset = 0
+                            isGestureActive = false
                             return
                         }
+
                         let base = isOpen ? drawerWidth : 0
                         let predicted = base + value.predictedEndTranslation.width
                         let willOpen = predicted > drawerWidth / 2
@@ -174,6 +252,7 @@ struct ChatSplitView<Sidebar: View, Content: View>: View {
                             isOpen = willOpen
                             dragOffset = 0
                         }
+                        isGestureActive = false
                     }
             )
             .onChange(of: isOpen) { oldValue, newValue in

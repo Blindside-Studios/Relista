@@ -50,6 +50,7 @@ struct PromptField: View {
                 .lineLimit(1...10)
                 .textFieldStyle(.plain)
                 .focused($isTextFieldFocused)
+                .blocksHorizontalSidebarGesture()
                 .onSubmit(sendMessage)
                 .onKeyPress { keyPress in
                     if keyPress.modifiers == .shift

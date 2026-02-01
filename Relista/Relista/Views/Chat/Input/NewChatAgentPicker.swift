@@ -15,8 +15,8 @@ struct NewChatAgentPicker: View {
     @ObservedObject private var agentManager = AgentManager.shared
     
     var body: some View {
-        ScrollView(.horizontal){
-            HStack{
+        ScrollView(.horizontal) {
+            HStack {
                 HStack{
                     Text("🐙 Default")
                     Spacer()
@@ -70,6 +70,7 @@ struct NewChatAgentPicker: View {
         }
         .scrollClipDisabled()
         .scrollIndicators(.hidden)
+        .blocksHorizontalSidebarGesture()
     }
 }
 
