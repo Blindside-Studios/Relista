@@ -33,15 +33,13 @@ struct ContentView: View {
 
     @State var selectedAgent: UUID? = nil
     @State var selectedModel: String = ModelList.placeHolderModel
-    @State var useReasoning = false
-    
     let reloadSidebar: () async -> Void
     
     var body: some View {
         UnifiedSplitView {
             Sidebar(showingSettings: $showingSettings, chatCache: $chatCache, selectedConversationID: $viewModel.selectedConversationID, selectedAgent: $selectedAgent, selectedModel: $selectedModel, createNewChat: createNewChat, reloadSidebar: reloadSidebar)
         } content: {
-            ChatWindow(conversationID: $viewModel.selectedConversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, useReasoning: $useReasoning)
+            ChatWindow(conversationID: $viewModel.selectedConversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel)
                 .toolbar(){
                     ToolbarItemGroup() {
                         Button("New chat", systemImage: "square.and.pencil"){

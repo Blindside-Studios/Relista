@@ -17,17 +17,24 @@ struct ToolUseBlock: Codable, Equatable {
     var isLoading: Bool
 }
 
+struct ThinkingBlock: Codable, Equatable {
+    var text: String
+    var isLoading: Bool
+}
+
 enum MessageContentBlock: Codable, Equatable {
     case text(String)
     case toolUse(ToolUseBlock)
+    case thinking(ThinkingBlock)
 
     private enum ContentType: String, Codable {
         case text
         case toolUse
+        case thinking
     }
 
     private enum CodingKeys: String, CodingKey {
-        case type, text, toolUse
+        case type, text, toolUse, thinking
     }
 
     init(from decoder: Decoder) throws {
@@ -38,6 +45,8 @@ enum MessageContentBlock: Codable, Equatable {
             self = .text(try container.decode(String.self, forKey: .text))
         case .toolUse:
             self = .toolUse(try container.decode(ToolUseBlock.self, forKey: .toolUse))
+        case .thinking:
+            self = .thinking(try container.decode(ThinkingBlock.self, forKey: .thinking))
         }
     }
 
@@ -50,6 +59,9 @@ enum MessageContentBlock: Codable, Equatable {
         case .toolUse(let block):
             try container.encode(ContentType.toolUse, forKey: .type)
             try container.encode(block, forKey: .toolUse)
+        case .thinking(let block):
+            try container.encode(ContentType.thinking, forKey: .type)
+            try container.encode(block, forKey: .thinking)
         }
     }
 }

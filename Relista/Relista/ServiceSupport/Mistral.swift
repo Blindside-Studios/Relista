@@ -185,11 +185,17 @@ struct Mistral {
             return ["role": message.role.toAPIString(), "content": content]
         }
 
+        let supportsReasoning = ModelList.getModelFromSlug(slug: modelName).supportsReasoning
+
         var body: [String: Any] = [
             "model": modelName,
             "messages": apiMessages,
             "stream": true
         ]
+
+        if supportsReasoning {
+            body["prompt_mode"] = "reasoning"
+        }
 
         if !tools.isEmpty {
             body["tools"] = tools.map { $0.definition }
@@ -205,6 +211,7 @@ struct Mistral {
             let capturedMessages = apiMessages
             let capturedModelName = modelName
             let capturedTools = tools
+            let capturedSupportsReasoning = supportsReasoning
 
             Task {
                 var accumulatedToolCalls: [String: [String: Any]] = [:]
@@ -264,10 +271,32 @@ struct Mistral {
                                 }
                             }
 
-                            // Yield content chunks
-                            if let delta = delta, let content = delta["content"] as? String {
-                                assistantMessage += content
-                                continuation.yield(.content(content))
+                            // Yield content/thinking chunks
+                            // Magistral returns delta.content as an array of typed blocks;
+                            // standard models return it as a plain string.
+                            if let delta = delta {
+                                if let contentArray = delta["content"] as? [[String: Any]] {
+                                    for block in contentArray {
+                                        let blockType = block["type"] as? String
+                                        if blockType == "thinking" {
+                                            if let thinkingItems = block["thinking"] as? [[String: Any]] {
+                                                for item in thinkingItems {
+                                                    if let text = item["text"] as? String, !text.isEmpty {
+                                                        continuation.yield(.thinkingChunk(text))
+                                                    }
+                                                }
+                                            }
+                                        } else if blockType == "text" {
+                                            if let text = block["text"] as? String, !text.isEmpty {
+                                                assistantMessage += text
+                                                continuation.yield(.content(text))
+                                            }
+                                        }
+                                    }
+                                } else if let content = delta["content"] as? String, !content.isEmpty {
+                                    assistantMessage += content
+                                    continuation.yield(.content(content))
+                                }
                             }
 
                             // Yield annotations
@@ -318,11 +347,15 @@ struct Mistral {
                                     ])
 
                                     var newRequest = capturedRequest
-                                    newRequest.httpBody = try JSONSerialization.data(withJSONObject: [
+                                    var newBody: [String: Any] = [
                                         "model": capturedModelName,
                                         "messages": newMessages,
                                         "stream": true
-                                    ] as [String: Any])
+                                    ]
+                                    if capturedSupportsReasoning {
+                                        newBody["prompt_mode"] = "reasoning"
+                                    }
+                                    newRequest.httpBody = try JSONSerialization.data(withJSONObject: newBody)
 
                                     print("🔄 Sending follow-up request...")
                                     let (newBytes, _) = try await URLSession.shared.bytes(for: newRequest)

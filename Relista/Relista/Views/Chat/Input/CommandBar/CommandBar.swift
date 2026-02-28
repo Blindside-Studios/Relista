@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct CommandBar: View {
-    @Binding var useReasoning: Bool
     @Binding var selectedModel: String
     @State var chatCache = ChatCache.shared
     @Binding var conversationID: UUID
@@ -42,8 +41,6 @@ struct CommandBar: View {
 
                 ToolsButton()
 
-                ReasoningButton(useReasoning: $useReasoning)
-
                 if horizontalSizeClass == .compact{
                     Spacer()
                 }
@@ -58,7 +55,6 @@ struct CommandBar: View {
 
             SendMessageButton(conversationID: $conversationID, sendMessage: sendMessage, sendMessageAsSystem: sendMessageAsSystem, accentColor: $secondaryAccentColor)
         }
-        .animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: useReasoning)
         .frame(maxHeight: 16)
     }
 }

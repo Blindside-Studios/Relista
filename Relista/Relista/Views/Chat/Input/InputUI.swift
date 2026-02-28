@@ -13,7 +13,6 @@ struct InputUI: View {
     @Binding var inputMessage: String
     @Binding var selectedAgent: UUID?
     @Binding var selectedModel: String
-    @Binding var useReasoning: Bool
     @Binding var primaryAccentColor: Color
     @Binding var secondaryAccentColor: Color
     
@@ -63,7 +62,7 @@ struct InputUI: View {
                             )
                     }
                     
-                    PromptField(conversationID: $conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, useReasoning: $useReasoning, primaryAccentColor: $primaryAccentColor, secondaryAccentColor: $secondaryAccentColor)
+                    PromptField(conversationID: $conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, primaryAccentColor: $primaryAccentColor, secondaryAccentColor: $secondaryAccentColor)
                 }
             } else {
                 VStack{
@@ -86,7 +85,7 @@ struct InputUI: View {
                             AnyTransition.blurFade.combined(with: .offset(y: -150)).combined(with: .opacity)
                         )
                     }
-                    PromptField(conversationID: $conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, useReasoning: $useReasoning, primaryAccentColor: $primaryAccentColor, secondaryAccentColor: $secondaryAccentColor)
+                    PromptField(conversationID: $conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, primaryAccentColor: $primaryAccentColor, secondaryAccentColor: $secondaryAccentColor)
                     if isChatBlank {
                         NewChatAgentPicker(conversationID: $conversationID, selectedAgent: $selectedAgent, selectedModel: $selectedModel)
                             .transition(

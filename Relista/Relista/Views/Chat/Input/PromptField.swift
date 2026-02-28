@@ -18,9 +18,7 @@ struct PromptField: View {
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @State private var chatCache = ChatCache.shared
     @State private var placeHolder = ChatPlaceHolders.returnRandomString()
-    
-    @Binding var useReasoning: Bool
-    
+
     @Binding var primaryAccentColor: Color
     @Binding var secondaryAccentColor: Color
     
@@ -63,7 +61,7 @@ struct PromptField: View {
                     }
                 }
             //.padding(spacing)
-            CommandBar(useReasoning: $useReasoning, selectedModel: $selectedModel, conversationID: $conversationID, secondaryAccentColor: $secondaryAccentColor, sendMessage: sendMessage, sendMessageAsSystem: sendMessageAsSystem, appendDummyMessages: appendDummyMessages)
+            CommandBar(selectedModel: $selectedModel, conversationID: $conversationID, secondaryAccentColor: $secondaryAccentColor, sendMessage: sendMessage, sendMessageAsSystem: sendMessageAsSystem, appendDummyMessages: appendDummyMessages)
         }
         .padding(spacing)
         .glassEffect(in: .rect(cornerRadius: CGFloat(cornerRadius)))

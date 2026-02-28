@@ -30,6 +30,8 @@ struct MessageModel: View {
                                 .textual.textSelection(.enabled)
                             case .toolUse(let toolBlock):
                                 ToolUseView(toolBlock: toolBlock)
+                            case .thinking(let thinkingBlock):
+                                ThinkingView(thinkingBlock: thinkingBlock)
                             }
                         }
                     } else {

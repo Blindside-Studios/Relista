@@ -344,15 +344,32 @@ class ChatCache {
                         var updatedMessage = chat.messages[assistantIndex]
 
                         switch chunk {
+                        case .thinkingChunk(let text):
+                            if updatedMessage.contentBlocks == nil {
+                                updatedMessage.contentBlocks = [.thinking(ThinkingBlock(text: text, isLoading: true))]
+                            } else {
+                                let lastIndex = updatedMessage.contentBlocks!.count - 1
+                                if case .thinking(var tb) = updatedMessage.contentBlocks![lastIndex] {
+                                    tb.text += text
+                                    updatedMessage.contentBlocks![lastIndex] = .thinking(tb)
+                                } else {
+                                    updatedMessage.contentBlocks!.append(.thinking(ThinkingBlock(text: text, isLoading: true)))
+                                }
+                            }
+                            updatedMessage.lastModified = Date.now
+
                         case .content(let text):
                             updatedMessage.text += text
                             updatedMessage.lastModified = Date.now
 
-                            // If contentBlocks are active, append to the last text block
-                            // (or start a new one if the last block is a tool block)
                             if updatedMessage.contentBlocks != nil {
                                 let lastIndex = updatedMessage.contentBlocks!.count - 1
-                                if case .text(let existing) = updatedMessage.contentBlocks![lastIndex] {
+                                if case .thinking(var tb) = updatedMessage.contentBlocks![lastIndex] {
+                                    // Thinking is done — mark complete and start a new text block
+                                    tb.isLoading = false
+                                    updatedMessage.contentBlocks![lastIndex] = .thinking(tb)
+                                    updatedMessage.contentBlocks!.append(.text(text))
+                                } else if case .text(let existing) = updatedMessage.contentBlocks![lastIndex] {
                                     updatedMessage.contentBlocks![lastIndex] = .text(existing + text)
                                 } else {
                                     updatedMessage.contentBlocks!.append(.text(text))

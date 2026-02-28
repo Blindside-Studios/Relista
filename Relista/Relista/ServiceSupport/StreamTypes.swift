@@ -12,4 +12,5 @@ enum StreamChunk {
     case annotations([MessageAnnotation])
     case toolUseStarted(id: String, toolName: String, displayName: String, icon: String, inputSummary: String)
     case toolResultReceived(id: String, result: String)
+    case thinkingChunk(String)
 }
