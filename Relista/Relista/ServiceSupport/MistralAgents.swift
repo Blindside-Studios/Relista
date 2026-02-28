@@ -120,7 +120,7 @@ struct MistralAgents {
 
             if let content = output["content"] as? [[String: Any]] {
                 var resultText = ""
-                var citations: [(title: String, url: String)] = []
+                var citations: [(title: String, url: String, date: String?)] = []
 
                 for chunk in content {
                     if let chunkType = chunk["type"] as? String {
@@ -129,7 +129,8 @@ struct MistralAgents {
                         } else if chunkType == "tool_reference",
                                   let title = chunk["title"] as? String,
                                   let url = chunk["url"] as? String {
-                            citations.append((title: title, url: url))
+                            let date = chunk["date"] as? String
+                            citations.append((title: title, url: url, date: date))
                         }
                     }
                 }
@@ -138,9 +139,13 @@ struct MistralAgents {
                     print("✓ Search completed, got \(resultText.count) characters and \(citations.count) citations")
 
                     if !citations.isEmpty {
-                        resultText += "\n\nSources:\n"
+                        resultText += "\n\n**Sources**\n"
                         for citation in citations {
-                            resultText += "- \(citation.title): \(citation.url)\n"
+                            var line = "- [\(citation.title)](\(citation.url))"
+                            if let date = citation.date, date.count >= 10 {
+                                line += " · \(date.prefix(10))"
+                            }
+                            resultText += line + "\n"
                         }
                     }
 

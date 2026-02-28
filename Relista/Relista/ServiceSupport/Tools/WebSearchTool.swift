@@ -19,7 +19,7 @@ struct WebSearchTool: ChatTool {
             "type": "function",
             "function": [
                 "name": "web_search",
-                "description": "Search the web for current information",
+                "description": "Search the web for current information. You will receive a response in natural language from a Mistral web search agent. The user can also see this response plus sources by expanding the tool use info panel.",
                 "parameters": [
                     "type": "object",
                     "properties": [
@@ -35,7 +35,7 @@ struct WebSearchTool: ChatTool {
     }
 
     func inputSummary(from arguments: [String: Any]) -> String {
-        arguments["query"] as? String ?? "searching…"
+        arguments["query"] as? String ?? "Searching…"
     }
 
     func execute(arguments: [String: Any]) async throws -> String {
