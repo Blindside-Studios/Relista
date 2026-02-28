@@ -29,11 +29,16 @@ struct CommandBar: View {
 
         HStack {
             HStack(alignment: .center, spacing: spacing){
-                Button("Simulate message flow", systemImage: "ant") {
-                    appendDummyMessages()
+                Button("Add content (not yet implemented)", systemImage: "plus") {
+                    
                 }
                 .labelStyle(.iconOnly)
                 .buttonStyle(.plain)
+                /*Button("Simulate message flow", systemImage: "ant") {
+                    appendDummyMessages()
+                }
+                .labelStyle(.iconOnly)
+                .buttonStyle(.plain)*/
 
                 ToolsButton()
 

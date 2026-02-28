@@ -15,39 +15,14 @@ struct ToolsButton: View {
         Button {
             showPopover.toggle()
         } label: {
-            Label {
-                Group {
-                    if anyEnabled {
-                        Text("Tools")
-                            .offset(x: -4)
-                            .foregroundStyle(.purple)
-                            .transition(.asymmetric(insertion: .opacity, removal: .opacity))
-                    } else {
-                        Color.clear.frame(width: 0, height: 0)
-                    }
-                }
-            } icon: {
-                Image(systemName: anyEnabled ? "hammer.fill" : "hammer")
-                    .foregroundStyle(anyEnabled ? .purple : .primary)
-                    #if os(macOS)
-                    .font(.system(size: 15, weight: .semibold))
-                    #endif
-            }
-            .background {
-                GeometryReader { g in
-                    RoundedRectangle(cornerRadius: g.size.height + 2, style: .continuous)
-                        .fill(Color.purple.opacity(anyEnabled ? 0.15 : 0.0001))
-                        .padding(anyEnabled ? -3 : 4)
-                }
-            }
-            .padding(.horizontal, !anyEnabled ? -4 : 0)
-            .offset(x: !anyEnabled ? 4 : 0)
-            .animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: anyEnabled)
+            Label("Tools", systemImage: anyEnabled ? "hammer.fill" : "hammer")
         }
         .frame(maxHeight: .infinity)
         .background(Color.clear)
+        .labelStyle(.iconOnly)
         .buttonStyle(.plain)
         .contentShape(Rectangle())
+        .animation(.default, value: anyEnabled)
         .popover(isPresented: $showPopover) {
             ToolsPopover()
                 .onDisappear {
@@ -98,8 +73,10 @@ private struct ToolToggleRow: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+                Spacer()
             }
         }
+        .toggleStyle(.switch)
         .padding(.vertical, 6)
         .onChange(of: isEnabled) { _, newValue in
             ToolRegistry.setEnabled(newValue, for: tool)
