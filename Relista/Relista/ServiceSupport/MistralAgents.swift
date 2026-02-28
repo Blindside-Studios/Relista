@@ -110,9 +110,15 @@ struct MistralAgents {
 
         // Find the message output entry
         for output in outputs {
-            if let type = output["type"] as? String, type == "message.output",
-               let content = output["content"] as? [[String: Any]] {
-                // Extract text and tool reference chunks from content
+            guard let type = output["type"] as? String, type == "message.output" else { continue }
+
+            // content can be either a plain String or an array of typed chunks
+            if let plainText = output["content"] as? String, !plainText.isEmpty {
+                print("✓ Search completed (plain string), got \(plainText.count) characters")
+                return plainText
+            }
+
+            if let content = output["content"] as? [[String: Any]] {
                 var resultText = ""
                 var citations: [(title: String, url: String)] = []
 
@@ -131,7 +137,6 @@ struct MistralAgents {
                 if !resultText.isEmpty {
                     print("✓ Search completed, got \(resultText.count) characters and \(citations.count) citations")
 
-                    // Optionally append citations as references
                     if !citations.isEmpty {
                         resultText += "\n\nSources:\n"
                         for citation in citations {

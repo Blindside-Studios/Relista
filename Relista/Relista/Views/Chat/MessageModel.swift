@@ -20,11 +20,26 @@ struct MessageModel: View {
     var body: some View {
         VStack{
             HStack {
-                StructuredText(markdown: message.text,
-                               patternOptions: .init(mathExpressions: true))
-                .textual.textSelection(.enabled)
-                    .padding()
-                
+                VStack(alignment: .leading, spacing: 0) {
+                    if let blocks = message.contentBlocks {
+                        ForEach(Array(blocks.enumerated()), id: \.offset) { _, block in
+                            switch block {
+                            case .text(let text):
+                                StructuredText(markdown: text,
+                                               patternOptions: .init(mathExpressions: true))
+                                .textual.textSelection(.enabled)
+                            case .toolUse(let toolBlock):
+                                ToolUseView(toolBlock: toolBlock)
+                            }
+                        }
+                    } else {
+                        StructuredText(markdown: message.text,
+                                       patternOptions: .init(mathExpressions: true))
+                        .textual.textSelection(.enabled)
+                    }
+                }
+                .padding()
+
                 Spacer()
             }
             HStack(spacing: 8) {

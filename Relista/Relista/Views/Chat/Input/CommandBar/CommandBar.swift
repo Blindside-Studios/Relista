@@ -8,26 +8,25 @@
 import SwiftUI
 
 struct CommandBar: View {
-    @Binding var useSearch: Bool
     @Binding var useReasoning: Bool
     @Binding var selectedModel: String
     @State var chatCache = ChatCache.shared
     @Binding var conversationID: UUID
     @Binding var secondaryAccentColor: Color
-    
+
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
-    
+
     let sendMessage: () -> Void
     let sendMessageAsSystem: () -> Void
     let appendDummyMessages: () -> Void
-    
+
     var body: some View {
         #if os(macOS)
         let spacing: CGFloat = 12
         #else
         let spacing: CGFloat = 16
         #endif
-        
+
         HStack {
             HStack(alignment: .center, spacing: spacing){
                 Button("Simulate message flow", systemImage: "ant") {
@@ -35,26 +34,25 @@ struct CommandBar: View {
                 }
                 .labelStyle(.iconOnly)
                 .buttonStyle(.plain)
-                
-                SearchButton(useSearch: $useSearch)
-                
+
+                ToolsButton()
+
                 ReasoningButton(useReasoning: $useReasoning)
-                
+
                 if horizontalSizeClass == .compact{
                     Spacer()
                 }
-                
+
                 ModelPicker(selectedModel: $selectedModel)
-                
+
                 if horizontalSizeClass != .compact{
                     Spacer()
                 }
             }
             .opacity(0.75)
-            
+
             SendMessageButton(conversationID: $conversationID, sendMessage: sendMessage, sendMessageAsSystem: sendMessageAsSystem, accentColor: $secondaryAccentColor)
         }
-        .animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: useSearch)
         .animation(.bouncy(duration: 0.3, extraBounce: 0.05), value: useReasoning)
         .frame(maxHeight: 16)
     }

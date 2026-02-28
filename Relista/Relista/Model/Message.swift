@@ -16,14 +16,15 @@ struct Message: Identifiable, Codable{
     var timeStamp: Date
     var lastModified: Date
     var annotations: [MessageAnnotation]?
+    var contentBlocks: [MessageContentBlock]?
     var conversationID: UUID
 
     // Custom Codable implementation for backwards compatibility
     enum CodingKeys: String, CodingKey {
-        case id, text, role, modelUsed, attachmentLinks, timeStamp, lastModified, annotations, conversationID
+        case id, text, role, modelUsed, attachmentLinks, timeStamp, lastModified, annotations, contentBlocks, conversationID
     }
 
-    init(id: UUID, text: String, role: MessageRole, modelUsed: String = "Unspecified Model", attachmentLinks: [String], timeStamp: Date, lastModified: Date = Date.now, annotations: [MessageAnnotation]? = nil, conversationID: UUID) {
+    init(id: UUID, text: String, role: MessageRole, modelUsed: String = "Unspecified Model", attachmentLinks: [String], timeStamp: Date, lastModified: Date = Date.now, annotations: [MessageAnnotation]? = nil, contentBlocks: [MessageContentBlock]? = nil, conversationID: UUID) {
         self.id = id
         self.text = text
         self.role = role
@@ -32,6 +33,7 @@ struct Message: Identifiable, Codable{
         self.timeStamp = timeStamp
         self.lastModified = lastModified
         self.annotations = annotations
+        self.contentBlocks = contentBlocks
         self.conversationID = conversationID
     }
 
@@ -47,6 +49,7 @@ struct Message: Identifiable, Codable{
         lastModified = try container.decodeIfPresent(Date.self, forKey: .lastModified) ?? Date.now
         // Backwards compatible: annotations may not exist in old messages
         annotations = try container.decodeIfPresent([MessageAnnotation].self, forKey: .annotations)
+        contentBlocks = try container.decodeIfPresent([MessageContentBlock].self, forKey: .contentBlocks)
         // Backwards compatible: conversationID may not exist in old messages
         // Will be set by ConversationManager.loadMessages() after loading
         conversationID = try container.decodeIfPresent(UUID.self, forKey: .conversationID) ?? UUID()
@@ -62,6 +65,7 @@ struct Message: Identifiable, Codable{
         try container.encode(timeStamp, forKey: .timeStamp)
         try container.encode(lastModified, forKey: .lastModified)
         try container.encodeIfPresent(annotations, forKey: .annotations)
+        try container.encodeIfPresent(contentBlocks, forKey: .contentBlocks)
         try container.encode(conversationID, forKey: .conversationID)
     }
 }

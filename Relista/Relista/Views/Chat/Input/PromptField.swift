@@ -19,7 +19,6 @@ struct PromptField: View {
     @State private var chatCache = ChatCache.shared
     @State private var placeHolder = ChatPlaceHolders.returnRandomString()
     
-    @Binding var useSearch: Bool
     @Binding var useReasoning: Bool
     
     @Binding var primaryAccentColor: Color
@@ -64,7 +63,7 @@ struct PromptField: View {
                     }
                 }
             //.padding(spacing)
-            CommandBar(useSearch: $useSearch, useReasoning: $useReasoning, selectedModel: $selectedModel, conversationID: $conversationID, secondaryAccentColor: $secondaryAccentColor, sendMessage: sendMessage, sendMessageAsSystem: sendMessageAsSystem, appendDummyMessages: appendDummyMessages)
+            CommandBar(useReasoning: $useReasoning, selectedModel: $selectedModel, conversationID: $conversationID, secondaryAccentColor: $secondaryAccentColor, sendMessage: sendMessage, sendMessageAsSystem: sendMessageAsSystem, appendDummyMessages: appendDummyMessages)
         }
         .padding(spacing)
         .glassEffect(in: .rect(cornerRadius: CGFloat(cornerRadius)))
@@ -113,7 +112,7 @@ struct PromptField: View {
                     to: conversationID,
                     apiKey: apiKey,
                     withHapticFeedback: vibrateOnTokensReceived,
-                    useSearch: useSearch
+                    tools: ToolRegistry.enabledTools()
                 )
             }
         }

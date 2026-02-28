@@ -233,7 +233,7 @@ class ChatCache {
         apiKey: String,
         withHapticFeedback: Bool = true,
         onCompletion: (() -> Void)? = nil,
-        useSearch: Bool = false
+        tools: [any ChatTool] = []
     ) {
         let chat = getChat(for: conversationID)
         guard let conversation = getConversation(for: conversationID) else { return }
@@ -302,11 +302,10 @@ class ChatCache {
                 switch model.provider {
                 case .anthropic:
                     let service = Claude(apiKey: apiKey)
-                    stream = try await service.streamMessage(messages: chat.messages, modelName: modelName, agent: agent, useSearch: useSearch)
+                    stream = try await service.streamMessage(messages: chat.messages, modelName: modelName, agent: agent, tools: tools)
                 default:
-                    // Default to Mistral for all other providers (OpenRouter compatibility)
                     let service = Mistral(apiKey: apiKey)
-                    stream = try await service.streamMessage(messages: chat.messages, modelName: modelName, agent: agent, useSearch: useSearch)
+                    stream = try await service.streamMessage(messages: chat.messages, modelName: modelName, agent: agent, tools: tools)
                 }
 
                 // Create blank assistant message
@@ -346,9 +345,19 @@ class ChatCache {
 
                         switch chunk {
                         case .content(let text):
-                            // Update message text
                             updatedMessage.text += text
                             updatedMessage.lastModified = Date.now
+
+                            // If contentBlocks are active, append to the last text block
+                            // (or start a new one if the last block is a tool block)
+                            if updatedMessage.contentBlocks != nil {
+                                let lastIndex = updatedMessage.contentBlocks!.count - 1
+                                if case .text(let existing) = updatedMessage.contentBlocks![lastIndex] {
+                                    updatedMessage.contentBlocks![lastIndex] = .text(existing + text)
+                                } else {
+                                    updatedMessage.contentBlocks!.append(.text(text))
+                                }
+                            }
 
                             // Haptic feedback with decreasing intensity
                             #if os(iOS)
@@ -359,8 +368,29 @@ class ChatCache {
                             }
                             #endif
 
+                        case .toolUseStarted(let id, let toolName, let displayName, let icon, let inputSummary):
+                            // Flush current text into a text block, then add the tool block
+                            let preToolText = updatedMessage.text
+                            updatedMessage.contentBlocks = [.text(preToolText),
+                                .toolUse(ToolUseBlock(id: id, toolName: toolName, displayName: displayName, icon: icon, inputSummary: inputSummary, result: nil, isLoading: true))]
+                            updatedMessage.lastModified = Date.now
+                            print("🔧 Tool use started: \(toolName) — \(inputSummary)")
+
+                        case .toolResultReceived(let id, let result):
+                            guard var blocks = updatedMessage.contentBlocks else { break }
+                            for i in blocks.indices {
+                                if case .toolUse(var tb) = blocks[i], tb.id == id {
+                                    tb.result = result
+                                    tb.isLoading = false
+                                    blocks[i] = .toolUse(tb)
+                                    break
+                                }
+                            }
+                            updatedMessage.contentBlocks = blocks
+                            updatedMessage.lastModified = Date.now
+                            print("📎 Tool result received for id: \(id)")
+
                         case .annotations(let annotations):
-                            // Store annotations (typically arrive at end of stream)
                             updatedMessage.annotations = annotations
                             updatedMessage.lastModified = Date.now
                             print("📎 Received \(annotations.count) annotation(s) for message")

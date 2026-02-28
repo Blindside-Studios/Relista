@@ -24,7 +24,7 @@ struct Claude {
         return request
     }
 
-    func streamMessage(messages: [Message], modelName: String, agent: UUID?, useSearch: Bool = false) async throws -> AsyncThrowingStream<StreamChunk, Error> {
+    func streamMessage(messages: [Message], modelName: String, agent: UUID?, tools: [any ChatTool] = []) async throws -> AsyncThrowingStream<StreamChunk, Error> {
         var request = makeRequest()
         let defaultInstructions = await MainActor.run { SyncedSettings.shared.defaultInstructions }
 
@@ -40,9 +40,8 @@ struct Claude {
             return ["role": message.role.toAPIString(), "content": content]
         }
 
-        if useSearch {
-            print("Web search not supported for Claude")
-        }
+        // Tools not yet implemented for Claude
+        _ = tools
 
         print("Model being used: \(modelName)")
 

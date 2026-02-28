@@ -14,7 +14,6 @@ struct ChatWindow: View {
     @Binding var selectedModel: String
     @State private var chatCache = ChatCache.shared
     
-    @Binding var useSearch: Bool
     @Binding var useReasoning: Bool
 
     @State private var scrollWithAnimation = true
@@ -60,7 +59,7 @@ struct ChatWindow: View {
                             #endif
                         }
                         .safeAreaBar(edge: .bottom, spacing: 0){
-                            InputUI(conversationID: $conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, useSearch: $useSearch, useReasoning: $useReasoning, primaryAccentColor: $primaryAccentColor, secondaryAccentColor: $secondaryAccentColor)
+                            InputUI(conversationID: $conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, useReasoning: $useReasoning, primaryAccentColor: $primaryAccentColor, secondaryAccentColor: $secondaryAccentColor)
                         }
                         .onChange(of: conversationID) { _, _ in
                             // scroll to last user/system message when switching conversations

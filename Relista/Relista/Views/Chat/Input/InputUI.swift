@@ -13,7 +13,6 @@ struct InputUI: View {
     @Binding var inputMessage: String
     @Binding var selectedAgent: UUID?
     @Binding var selectedModel: String
-    @Binding var useSearch: Bool
     @Binding var useReasoning: Bool
     @Binding var primaryAccentColor: Color
     @Binding var secondaryAccentColor: Color
@@ -64,13 +63,13 @@ struct InputUI: View {
                             )
                     }
                     
-                    PromptField(conversationID: $conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, useSearch: $useSearch, useReasoning: $useReasoning, primaryAccentColor: $primaryAccentColor, secondaryAccentColor: $secondaryAccentColor)
+                    PromptField(conversationID: $conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, useReasoning: $useReasoning, primaryAccentColor: $primaryAccentColor, secondaryAccentColor: $secondaryAccentColor)
                 }
             } else {
                 VStack{
                     if isChatBlank {
                         Spacer()
-                        
+
                         HStack(alignment: .bottom){
                             Spacer()
                             Text(agentIcon)
@@ -82,13 +81,12 @@ struct InputUI: View {
                         }
                         .padding()
                         .font(Font.largeTitle.bold())
-                        // cap it to something really small, in combination with elements not being clipped and the bottom alignment, this will make the text expand upwards.
                         .frame(height: 20, alignment: .bottom)
                         .transition(
                             AnyTransition.blurFade.combined(with: .offset(y: -150)).combined(with: .opacity)
                         )
                     }
-                    PromptField(conversationID: $conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, useSearch: $useSearch, useReasoning: $useReasoning, primaryAccentColor: $primaryAccentColor, secondaryAccentColor: $secondaryAccentColor)
+                    PromptField(conversationID: $conversationID, inputMessage: $inputMessage, selectedAgent: $selectedAgent, selectedModel: $selectedModel, useReasoning: $useReasoning, primaryAccentColor: $primaryAccentColor, secondaryAccentColor: $secondaryAccentColor)
                     if isChatBlank {
                         NewChatAgentPicker(conversationID: $conversationID, selectedAgent: $selectedAgent, selectedModel: $selectedModel)
                             .transition(
