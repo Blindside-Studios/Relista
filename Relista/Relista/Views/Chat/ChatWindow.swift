@@ -16,6 +16,8 @@ struct ChatWindow: View {
     
     @Binding var useReasoning: Bool
 
+    @AppStorage("chatFontSize") private var chatFontSize: Double = 13
+
     @State private var scrollWithAnimation = true
     @State private var primaryAccentColor: Color = .clear
     @State private var secondaryAccentColor: Color = .primary
@@ -46,9 +48,10 @@ struct ChatWindow: View {
                                     }
                                 }
                             }
+                            .environment(\.font, .system(size: chatFontSize))
                             // to center-align
                             .frame(maxWidth: .infinity)
-                            .frame(maxWidth: 740)
+                            .frame(maxWidth: 740 + max(0, (chatFontSize - 13) / (24 - 13)) * (geo.size.width - 740))
                             .frame(maxWidth: .infinity)
                         }
                         .scrollDismissesKeyboard(.interactively)

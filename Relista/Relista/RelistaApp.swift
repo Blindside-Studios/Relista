@@ -8,6 +8,24 @@
 import SwiftUI
 import Foundation
 
+#if os(macOS)
+struct TextSizeCommands: Commands {
+    @AppStorage("chatFontSize") private var fontSize: Double = 13
+
+    var body: some Commands {
+        CommandGroup(after: .sidebar) {
+            Divider()
+            Button("Make Text Bigger", systemImage: "textformat.size.larger") { fontSize = min(fontSize + 1, 24) }
+                .keyboardShortcut("+", modifiers: .command)
+            Button("Make Text Smaller", systemImage: "textformat.size.smaller") { fontSize = max(fontSize - 1, 9) }
+                .keyboardShortcut("-", modifiers: .command)
+            Button("Make Text Normal Size", systemImage: "textformat.size") { fontSize = 13 }
+                .keyboardShortcut("0", modifiers: .command)
+        }
+    }
+}
+#endif
+
 @main
 struct RelistaApp: App {
     @State private var hasInitialized = false
@@ -54,6 +72,10 @@ struct RelistaApp: App {
                 }
                 .keyboardShortcut("r", modifiers: .command)
             }
+            #endif
+
+            #if os(macOS)
+            TextSizeCommands()
             #endif
         }
 

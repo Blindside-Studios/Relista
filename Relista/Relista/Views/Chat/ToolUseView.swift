@@ -32,7 +32,6 @@ struct ToolUseView: View {
                         .imageScale(.small)
                 }
             }
-            .font(.body)
             .opacity(0.8)
             .animation(.default, value: toolBlock.isLoading)
             .onTapGesture {
