@@ -35,9 +35,10 @@ struct ToolUseView: View {
                 } else {
                     Image(systemName: "chevron.right")
                         .imageScale(.small)
+                        .foregroundStyle(.secondary)
                 }
             }
-            .opacity(0.8)
+            .opacity(0.7)
             .animation(.default, value: toolBlock.isLoading)
             .animation(.default, value: showPopover)
             .animation(.default, value: showSheet)

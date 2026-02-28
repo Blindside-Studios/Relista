@@ -26,9 +26,9 @@ struct ThinkingView: View {
                 }
                 Image(systemName: "chevron.right")
                     .imageScale(.small)
-                    .rotationEffect(showPopover || showSheet ? .degrees(90) : .degrees(0))
+                    .foregroundStyle(.secondary)
             }
-            .opacity(0.8)
+            .opacity(0.7)
             .animation(.default, value: thinkingBlock.isLoading)
             .animation(.default, value: showPopover)
             .animation(.default, value: showSheet)
