@@ -27,7 +27,7 @@ class ConversationManager {
         return localURL
     }()
     
-    private static var conversationsURL: URL {
+    static var conversationsURL: URL {
         relistaURL.appendingPathComponent("conversations")
     }
     

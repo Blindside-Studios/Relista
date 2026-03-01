@@ -12,6 +12,7 @@ struct CommandBar: View {
     @State var chatCache = ChatCache.shared
     @Binding var conversationID: UUID
     @Binding var secondaryAccentColor: Color
+    @Binding var pendingAttachments: [PendingAttachment]
 
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
@@ -28,16 +29,7 @@ struct CommandBar: View {
 
         HStack {
             HStack(alignment: .center, spacing: spacing){
-                Button("Add content (not yet implemented)", systemImage: "plus") {
-                    
-                }
-                .labelStyle(.iconOnly)
-                .buttonStyle(.plain)
-                /*Button("Simulate message flow", systemImage: "ant") {
-                    appendDummyMessages()
-                }
-                .labelStyle(.iconOnly)
-                .buttonStyle(.plain)*/
+                AttachmentPickerButton(pendingAttachments: $pendingAttachments)
 
                 ToolsButton()
 

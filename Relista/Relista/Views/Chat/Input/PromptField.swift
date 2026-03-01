@@ -23,6 +23,7 @@ struct PromptField: View {
     @Binding var secondaryAccentColor: Color
     
     @State private var isTryingToAddNewLine = false // workaround for .handled because iPadOS 26 is garbage
+    @State private var pendingAttachments: [PendingAttachment] = []
 
     @AppStorage("HapticFeedbackForMessageGeneration") private var vibrateOnTokensReceived: Bool = true
     #if os(macOS)
@@ -44,6 +45,10 @@ struct PromptField: View {
         let spacing: CGFloat = 16
         #endif
         VStack(spacing: spacing) {
+            if !pendingAttachments.isEmpty {
+                PendingImageStrip(pendingAttachments: $pendingAttachments)
+                    .transition(.blurFade.combined(with: .opacity))
+            }
             TextField(placeHolder, text: $inputMessage, axis: .vertical)
                 .lineLimit(1...10)
                 .textFieldStyle(.plain)
@@ -64,8 +69,9 @@ struct PromptField: View {
                     }
                 }
             //.padding(spacing)
-            CommandBar(selectedModel: $selectedModel, conversationID: $conversationID, secondaryAccentColor: $secondaryAccentColor, sendMessage: sendMessage, sendMessageAsSystem: sendMessageAsSystem, appendDummyMessages: appendDummyMessages)
+            CommandBar(selectedModel: $selectedModel, conversationID: $conversationID, secondaryAccentColor: $secondaryAccentColor, pendingAttachments: $pendingAttachments, sendMessage: sendMessage, sendMessageAsSystem: sendMessageAsSystem, appendDummyMessages: appendDummyMessages)
         }
+        .animation(.bouncy(duration: 0.3), value: pendingAttachments.isEmpty)
         .padding(spacing)
         .glassEffect(in: .rect(cornerRadius: CGFloat(cornerRadius)))
         //.shadow(color: primaryAccentColor.opacity(0.4), radius: 20)
@@ -108,6 +114,10 @@ struct PromptField: View {
                     // force render refresh to prevent a bug where the placeholder text isn't showing up and the blinking cursor disappears
                 }
                 
+                // Capture and clear pending attachments before the async send
+                let attachmentsToSend = pendingAttachments.map { ($0.data, $0.fileExtension) }
+                pendingAttachments = []
+
                 // Use ChatCache to send message and handle generation
                 chatCache.sendMessage(
                     modelName: selectedModel,
@@ -116,7 +126,8 @@ struct PromptField: View {
                     to: conversationID,
                     apiKey: apiKey,
                     withHapticFeedback: vibrateOnTokensReceived,
-                    tools: ToolRegistry.enabledTools(for: selectedAgent)
+                    tools: ToolRegistry.enabledTools(for: selectedAgent, conversationID: conversationID),
+                    attachments: attachmentsToSend
                 )
             }
         }

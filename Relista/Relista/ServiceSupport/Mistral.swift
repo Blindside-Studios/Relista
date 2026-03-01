@@ -182,6 +182,13 @@ struct Mistral {
             if content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 content = "[No message content]"
             }
+            // Inject attachment context directly into the user message content so it
+            // works within Mistral's constraint of no system messages after the first exchange.
+            if !message.attachmentLinks.isEmpty,
+               let attachmentContext = AttachmentManager.attachmentContextBlock(
+                for: message.attachmentLinks, in: message.conversationID) {
+                content += "\n\n" + attachmentContext
+            }
             return ["role": message.role.toAPIString(), "content": content]
         }
 

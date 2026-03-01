@@ -35,15 +35,23 @@ enum ToolRegistry {
     }
 
     /// Returns only the tools that are currently enabled, with context-sensitive tools
-    /// (like WriteMemoryTool) configured for the active agent.
-    static func enabledTools(for agentID: UUID? = nil) -> [any ChatTool] {
-        allTools
+    /// (like WriteMemoryTool and AnalyzeImageTool) configured for the active context.
+    static func enabledTools(for agentID: UUID? = nil, conversationID: UUID? = nil) -> [any ChatTool] {
+        var tools = allTools
             .filter { isEnabled($0) }
-            .map { tool in
+            .map { tool -> any ChatTool in
                 if tool.name == "memory" {
                     return WriteMemoryTool(agentID: agentID)
                 }
                 return tool
             }
+
+        // AnalyzeImageTool is always available when we have a conversation context;
+        // it does not appear in allTools because it is not user-toggleable.
+        if let conversationID {
+            tools.append(AnalyzeImageTool(conversationID: conversationID))
+        }
+
+        return tools
     }
 }

@@ -233,7 +233,8 @@ class ChatCache {
         apiKey: String,
         withHapticFeedback: Bool = true,
         onCompletion: (() -> Void)? = nil,
-        tools: [any ChatTool] = []
+        tools: [any ChatTool] = [],
+        attachments: [(data: Data, fileExtension: String)] = []
     ) {
         let chat = getChat(for: conversationID)
         guard let conversation = getConversation(for: conversationID) else { return }
@@ -261,12 +262,23 @@ class ChatCache {
             print("  ↩️ Conversation already has messages (hasMessages=true)")
         }
 
+        // Save any attached images and collect their filenames
+        var attachmentLinks: [String] = []
+        for attachment in attachments {
+            if let filename = try? AttachmentManager.saveImage(
+                attachment.data,
+                fileExtension: attachment.fileExtension,
+                for: conversationID) {
+                attachmentLinks.append(filename)
+            }
+        }
+
         // Add user message
         let userMsg = Message(
             id: UUID(),
             text: inputText,
             role: .user,
-            attachmentLinks: [],
+            attachmentLinks: attachmentLinks,
             timeStamp: .now,
             lastModified: Date.now,
             conversationID: conversationID
