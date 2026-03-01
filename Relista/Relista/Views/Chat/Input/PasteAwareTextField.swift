@@ -64,6 +64,24 @@ struct PasteAwareTextField: UIViewRepresentable {
         }
     }
 
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: PasteInterceptingTextView, context: Context) -> CGSize? {
+        let width = proposal.width ?? UIScreen.main.bounds.width
+        let lineHeight = uiView.font?.lineHeight ?? 20
+        let maxHeight = ceil(lineHeight * 10)
+
+        // Ask the text view how tall it wants to be at the proposed width.
+        let fitting = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
+        let height = min(fitting.height, maxHeight)
+
+        // Enable internal scrolling only when content overflows the cap.
+        let needsScroll = fitting.height > maxHeight
+        if uiView.isScrollEnabled != needsScroll {
+            uiView.isScrollEnabled = needsScroll
+        }
+
+        return CGSize(width: width, height: height)
+    }
+
     func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
 
     // MARK: Coordinator
