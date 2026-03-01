@@ -18,25 +18,30 @@ struct PendingAttachment: Identifiable {
     let fileExtension: String
 }
 
-/// The + button in the CommandBar. Opens a menu to attach photos or take a picture.
+/// The + button in the CommandBar. Opens a menu to attach photos or files.
 struct AttachmentPickerButton: View {
     @Binding var pendingAttachments: [PendingAttachment]
 
+    // Shared across platforms
+    @State private var showPhotoPicker = false
+    @State private var photoPickerItems: [PhotosPickerItem] = []
+
     #if os(iOS)
-    @State private var photoPickerItem: PhotosPickerItem? = nil
+    @State private var showFilePicker = false
     @State private var showCamera = false
     #endif
 
     var body: some View {
         Menu {
-            Button("Upload File", systemImage: "folder") {
-                // Not yet implemented
+            // Photos app picker — works on iOS and macOS via .photosPicker modifier below.
+            Button("Select Photo", systemImage: "photo.on.rectangle") {
+                showPhotoPicker = true
             }
-            .disabled(true)
 
             #if os(iOS)
-            PhotosPicker(selection: $photoPickerItem, matching: .images) {
-                Label("Upload Photo", systemImage: "photo.on.rectangle")
+            // Image-only file picker (Files app, cloud storage, etc.)
+            Button("Choose File", systemImage: "folder") {
+                showFilePicker = true
             }
 
             Button("Take Photo", systemImage: "camera") {
@@ -49,7 +54,8 @@ struct AttachmentPickerButton: View {
                 }
             }
             #else
-            Button("Choose Image…", systemImage: "photo") {
+            // On macOS, NSOpenPanel covers the file-browser use-case.
+            Button("Choose File", systemImage: "folder") {
                 openImagePanel()
             }
             #endif
@@ -57,18 +63,38 @@ struct AttachmentPickerButton: View {
             Image(systemName: "plus")
         }
         .buttonStyle(.plain)
-        #if os(iOS)
-        .onChange(of: photoPickerItem) { _, item in
-            guard let item else { return }
-            Task {
-                if let data = try? await item.loadTransferable(type: Data.self) {
-                    // Normalize to JPEG so we have a consistent format and known extension
-                    let normalized = UIImage(data: data).flatMap { $0.jpegData(compressionQuality: 0.9) } ?? data
+        // Presented as a modifier so the sheet has a stable host in the view hierarchy.
+        .photosPicker(isPresented: $showPhotoPicker,
+                      selection: $photoPickerItems,
+                      maxSelectionCount: nil,
+                      matching: .images)
+        .onChange(of: photoPickerItems) { _, items in
+            guard !items.isEmpty else { return }
+            let captured = items
+            photoPickerItems = []           // clear immediately so re-opening works
+            for item in captured {
+                Task {
+                    guard let data = try? await item.loadTransferable(type: Data.self) else { return }
+                    guard let attachment = normalize(data) else { return }
                     await MainActor.run {
-                        pendingAttachments.append(PendingAttachment(data: normalized, fileExtension: "jpg"))
-                        photoPickerItem = nil
+                        pendingAttachments.append(attachment)
                     }
                 }
+            }
+        }
+        #if os(iOS)
+        .fileImporter(
+            isPresented: $showFilePicker,
+            allowedContentTypes: [.image],
+            allowsMultipleSelection: true
+        ) { result in
+            guard case .success(let urls) = result else { return }
+            for url in urls {
+                guard url.startAccessingSecurityScopedResource() else { continue }
+                defer { url.stopAccessingSecurityScopedResource() }
+                guard let data = try? Data(contentsOf: url),
+                      let attachment = normalize(data) else { continue }
+                pendingAttachments.append(attachment)
             }
         }
         .fullScreenCover(isPresented: $showCamera) {
@@ -77,6 +103,24 @@ struct AttachmentPickerButton: View {
             }
             .ignoresSafeArea()
         }
+        #endif
+    }
+
+    // MARK: - Helpers
+
+    /// Decodes any OS-supported image format and re-encodes to JPEG.
+    private func normalize(_ data: Data) -> PendingAttachment? {
+        #if os(iOS)
+        guard let ui = UIImage(data: data),
+              let jpeg = ui.jpegData(compressionQuality: 0.9) else { return nil }
+        return PendingAttachment(data: jpeg, fileExtension: "jpg")
+        #else
+        guard let ns = NSImage(data: data),
+              let tiff = ns.tiffRepresentation,
+              let rep = NSBitmapImageRep(data: tiff),
+              let jpeg = rep.representation(using: .jpeg, properties: [.compressionFactor: 0.9])
+        else { return nil }
+        return PendingAttachment(data: jpeg, fileExtension: "jpg")
         #endif
     }
 
@@ -92,21 +136,16 @@ struct AttachmentPickerButton: View {
     private func openImagePanel() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [
-            UTType.jpeg, UTType.png, UTType.gif, UTType.webP, UTType.heic, UTType.tiff, UTType.image
+            UTType.jpeg, UTType.png, UTType.gif, UTType.webP,
+            UTType.heic, UTType.tiff, UTType.image,
         ]
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
-
         guard panel.runModal() == .OK else { return }
         for url in panel.urls {
-            // Load through NSImage so HEIC and TIFF are decoded and re-encoded to JPEG,
-            // ensuring every format Pixtral can't read natively gets normalized.
             guard let ns = NSImage(contentsOf: url),
-                  let tiff = ns.tiffRepresentation,
-                  let rep = NSBitmapImageRep(data: tiff),
-                  let jpeg = rep.representation(using: .jpeg, properties: [.compressionFactor: 0.9])
-            else { continue }
-            pendingAttachments.append(PendingAttachment(data: jpeg, fileExtension: "jpg"))
+                  let attachment = normalize(ns.tiffRepresentation ?? Data()) else { continue }
+            pendingAttachments.append(attachment)
         }
     }
     #endif
